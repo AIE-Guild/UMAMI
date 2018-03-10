@@ -1,5 +1,7 @@
 # UMAMI
 
+[![Join the chat at https://gitter.im/AIE-Guild/umami](https://badges.gitter.im/AIE-Guild/umami.svg)](https://gitter.im/AIE-Guild/umami?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Universal Multigame AIE Membership Interface
 
 [![Build Status](https://travis-ci.org/AIE-Guild/umami.svg?branch=develop)](https://travis-ci.org/AIE-Guild/umami)
