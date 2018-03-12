@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'umami',
+    'redirect',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -84,6 +85,7 @@ if not LOCALDEV:
 ROOT_URLCONF = 'umami.urls'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'redirect.middleware.RedirectServiceMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,6 +95,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REDIRECT_HOST = env('REDIRECT_HOST', None)
+REDIRECT_BASE = env('REDIRECT_BASE', '/')
+REDIRECT_SECURE = env.bool('REDIRECT_SECURE', True)
 
 #
 # Services
