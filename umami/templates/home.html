@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block head_title %}{% trans "AIE UMAMI" %}{% endblock head_title %}
+{% block content %}
+  <div class="jumbotron text-display">
+    <div class="media">
+      <img class="align-self-center mr-4" src="{% static "/img/aie_logo_140.png" %}">
+      <div class="media-body align-self-center">
+        <h1 class="mt-0">{% trans "Alea Iacta Est" %}</h1>
+        {% blocktrans %}Universal Multigame AIE Member Interface{% endblocktrans %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

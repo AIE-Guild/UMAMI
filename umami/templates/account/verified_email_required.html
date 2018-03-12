@@ -1,0 +1,31 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Verify Your E-mail Address" %}{% endblock head_title %}
+
+{% block panel_title %}{% trans "Verify Your E-mail Address" %}{% endblock panel_title %}
+
+{% block panel_content %}
+  {% url 'account_email' as email_url %}
+
+  <p class="card-text">
+    {% blocktrans %}
+      This part of the site requires us to verify that you are who you claim to be. For this purpose,
+      we require that you verify ownership of your e-mail address.
+    {% endblocktrans %}
+  </p>
+
+  <p class="card-text">
+    {% blocktrans %}
+      We have sent an e-mail to you for verification. Please click on the link inside this e-mail
+    {% endblocktrans %}
+  </p>
+
+  <p class="card-text">
+    {% blocktrans %}
+      <strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.
+    {% endblocktrans %}
+  </p>
+
+{% endblock panel_content %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+  <div id="accountbox" style="margin-top:50px;" class="container col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3">
+    <div class="card bg-light">
+      <div class="card-body">
+        <h5 class="card-title">
+          {% block panel_title %}{% endblock panel_title %}
+        </h5>
+        {% block panel_content %}{% endblock panel_content %}
+      </div>
+      <div class="card-footer text-muted text-right font-weight-light">
+        {% block panel_footer %}{% endblock panel_footer %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}
