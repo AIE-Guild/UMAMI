@@ -1,0 +1,34 @@
+{% load bootstrap4 %}
+{% load staticfiles %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found</title>
+  <meta name="description" content="UMAMI Redirect Service">
+  {% block stylesheets %}
+    {% bootstrap_css %}
+    <link href="https://fonts.googleapis.com/css?family=Lato|Rubik:400,700&amp;subset=latin-ext" rel="stylesheet">
+  {% endblock stylesheets %}
+</head>
+<body class="text-center">
+
+<div class="jumbotron jumbotron-fluid">
+
+  <div class="container" style="font-family: 'Lato'">
+    <h1 class="display-4" style="font-family: 'Rubik'">Page Not Found</h1>
+    <p class="lead">No matching redirect was found.</p>
+    <p class="lead">Visit the <a href="https://aie-guild.org">AIE homepage</a> or
+      <a href="mailto:admin@aie-guild.org">contact us</a>.</p>
+  </div>
+
+</div>
+
+{% block scripts %}
+  {% bootstrap_javascript jquery="slim" %}
+  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+{% endblock scripts %}
+</body>
+</html>

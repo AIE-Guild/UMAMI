@@ -2,6 +2,7 @@
 import logging
 
 from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.template.response import TemplateResponse
 
 from django.conf import settings
 from redirect.models import Redirect
@@ -21,7 +22,7 @@ class RedirectServiceMiddleware:
                 redirect = Redirect.objects.get(path=request.path_info)
             except Redirect.DoesNotExist:
                 logger.warning("No redirect configured for '%s'.", request.path_info)
-                return HttpResponseNotFound('No redirect configured for this path.')
+                return TemplateResponse(request, 'redirect/404.html', status=404)
             logger.info("Redirecting '%s' to '%s'.", request.path_info, redirect.location)
             return HttpResponseRedirect(redirect.location)
         else:
