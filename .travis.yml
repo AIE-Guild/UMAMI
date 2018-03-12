@@ -6,7 +6,7 @@ python:
 
 env:
   global:
-    - DJANGO="2.0.2"
+    - DJANGO="2.0.3"
     - DJANGO_SETTINGS_MODULE="umami.settings"
     - PIP_USE_MIRRORS=true
     - DATABASE_URL=sqlite:///db.sqlite3
