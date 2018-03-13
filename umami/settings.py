@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.discord',
     'bootstrap4',
+    'markdownx',
 ]
 
 #
