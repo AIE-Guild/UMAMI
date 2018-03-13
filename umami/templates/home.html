@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load bulletins %}
 {% block head_title %}{% trans "AIE UMAMI" %}{% endblock head_title %}
 {% block content %}
   <div class="jumbotron text-display p-3 p-md-5 text-white rounded bg-dark">
@@ -13,4 +14,20 @@
     </div>
   </div>
 
+  {% group_bulletins 3 as bulletins %}
+  {% for bulletin_row in bulletins %}
+    <div class="card-deck">
+      {% for bulletin in bulletin_row %}
+        <div class="card mb-4">
+          <div class="card-header">{{ bulletin.title }}</div>
+          <div class="card-body">
+            <div class="card-text">
+              {{ bulletin.as_html|safe }}
+            </div>
+          </div>
+          <div class="card-footer bg-transparent text-right">{{ bulletin.published }}</div>
+        </div>
+      {% endfor bulletin_row %}
+    </div>
+  {% endfor bulletins %}
 {% endblock content %}
