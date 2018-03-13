@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from django import template
-from django.utils.translation import ugettext_lazy as _
 
 from umami.models import Bulletin
 
@@ -13,7 +12,10 @@ class GroupBulletinsNode(template.Node):
         self.name = name
 
     def render(self, context):
-        query = Bulletin.objects.filter(publish=True)
+        if context['user'].is_authenticated:
+            query = Bulletin.objects.filter(publish=True)
+        else:
+            query = Bulletin.objects.filter(publish=True, public=True)
         if self.size > 0:
             context[self.name] = [tuple(query[i:i + self.size]) for i in range(0, len(query), self.size)]
         else:
