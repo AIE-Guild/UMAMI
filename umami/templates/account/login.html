@@ -43,12 +43,9 @@
     </div>
 
     <p class="card-text text-right mt-5">
-      <a class="card-link" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+      <a class="card-link" href="{% url 'account_reset_password' %}">{% trans "Forgot your username or password?" %}</a>
     </p>
   </form>
 
 {% endblock panel_content %}
 
-{% block panel_footer %}
-  <a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-{% endblock panel_footer %}
