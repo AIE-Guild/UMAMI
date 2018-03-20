@@ -1,4 +1,4 @@
-{% extends "account/base.html" %}
+{% extends "account/auth_base.html" %}
 
 {% load bootstrap4 %}
 {% load i18n %}
@@ -6,11 +6,7 @@
 
 {% block head_title %}{% trans "Sign Up" %}{% endblock head_title %}
 
-{% block panel_title %}{% trans "Sign Up" %}{% endblock panel_title %}
-
 {% block panel_content %}
-  <p class="card-text">{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">log in</a>.{% endblocktrans %}</p>
-
   <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
     {% csrf_token %}
     {% bootstrap_form form layout="inline" %}
@@ -23,7 +19,7 @@
         <button class="btn btn-outline-success btn-block" type="submit">{%  trans "Sign Up" %}</button>
       </div>
       <div class="col-sm">
-        <button class="btn btn-outline-secondary btn-block" type="reset">{% trans "Cancel" %}</button>
+        <button class="btn btn-outline-secondary btn-block" type="reset">{% trans "Reset" %}</button>
       </div>
     </div>
 
