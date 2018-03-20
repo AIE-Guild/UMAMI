@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
+import re
+
 from django import template
+from django.urls import reverse, NoReverseMatch
 
 register = template.Library()
 
 
-@register.simple_tag
-def active(request, pattern):
-    import re
-    if re.search(pattern, request.path):
+@register.simple_tag(takes_context=True)
+def active(context, target):
+    try:
+        pattern = '^' + reverse(target)
+    except NoReverseMatch:
+        pattern = target
+    path = context['request'].path
+    if re.search(pattern, path):
         return 'active'
     return ''
