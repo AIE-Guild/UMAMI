@@ -1,12 +1,10 @@
-{% extends "account/base.html" %}
+{% extends "account/auth_base.html" %}
 
 {% load bootstrap4 %}
 {% load i18n %}
 {% load account socialaccount %}
 
 {% block head_title %}{% trans "Log In" %}{% endblock %}
-
-{% block panel_title %}{% trans "Log In" %}{% endblock panel_title %}
 
 {% block panel_content %}
 
@@ -21,7 +19,7 @@
       </a>
     {% endfor socialaccount_providers %}
 
-    <div class="login-or">
+    <div class="login-or mt-3 mb-3">
       <hr class="hr-or">
       <span class="span-or">{% trans 'OR' %}</span>
     </div>
@@ -40,20 +38,14 @@
         <button class="btn btn-outline-success btn-block" type="submit">{% trans "Log In" %}</button>
       </div>
       <div class="col-sm">
-        <button class="btn btn-outline-secondary btn-block" type="reset">{% trans "Cancel" %}</button>
-      </div>
-      <div class="col-sm">
-        <a class="btn btn-outline-primary btn-block" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
+        <button class="btn btn-outline-secondary btn-block" type="reset">{% trans "Reset" %}</button>
       </div>
     </div>
 
     <p class="card-text text-right mt-5">
-      <a class="card-link" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+      <a class="card-link" href="{% url 'account_reset_password' %}">{% trans "Forgot your username or password?" %}</a>
     </p>
   </form>
 
 {% endblock panel_content %}
 
-{% block panel_footer %}
-  <a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-{% endblock panel_footer %}
