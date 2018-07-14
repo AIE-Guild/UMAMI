@@ -1,12 +1,13 @@
-sudo: false
 language: python
+dist: xenial
+sudo: true
 
 python:
-  - 3.6
+  - 3.7
 
 env:
   global:
-    - DJANGO="2.0.3"
+    - DJANGO="2.0.7"
     - DJANGO_SETTINGS_MODULE="umami.settings"
     - PIP_USE_MIRRORS=true
     - DATABASE_URL=sqlite:///db.sqlite3
@@ -16,14 +17,13 @@ cache:
     - $HOME/.cache/pip
 
 install:
-    - pip install -r requirements.txt
-    - pip install pytest pytest-django pytest-cov
-    - pip install coveralls
+  - pip install pipenv
+  - pipenv install --dev
+  - python manage.py migrate --noinput
+  - python manage.py collectstatic --noinput
 
 script:
-    - python manage.py migrate --noinput
-    - python manage.py collectstatic --noinput
-    - pytest --cov umami --cov redirect
+  - pipenv run pytest
 
 after_success: coveralls
 
