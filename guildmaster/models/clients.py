@@ -1,6 +1,6 @@
 import logging
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, TypeVar
 
 import jsonfield
@@ -75,15 +75,15 @@ class ClientAdapterManager(models.Manager):
 class Client(models.Model, metaclass=ClientAdapterRegistry):
     """A base class for STI that uses the adapter attribute to distinguish subclass type."""
     DISCORD = 'discord'
-    BNET_WOW = 'battle_net_wow'
-    BNET_D3 = 'battle_net_d3'
-    BNET_SC2 = 'battle_net_sc2'
+    BN_WOW = 'battle_net_wow'
+    BN_D3 = 'battle_net_d3'
+    BN_SC2 = 'battle_net_sc2'
     EVE = 'eve_online'
     ADAPTER_CHOICES = (
         (DISCORD, 'Discord'),
-        (BNET_WOW, 'Battle.net - World of Warcraft'),
-        (BNET_D3, 'Battle.net - Diablo 3'),
-        (BNET_SC2, 'Battle.net - Starcraft 2'),
+        (BN_WOW, 'Battle.net - World of Warcraft'),
+        (BN_D3, 'Battle.net - Diablo 3'),
+        (BN_SC2, 'Battle.net - Starcraft 2'),
         (EVE, 'EVE Online')
     )
 
@@ -210,6 +210,7 @@ class ClientAdapterControl:
     id: str
     authorization_url: str
     token_url: str
-    revocation_url: str
     resource_url: str
     resource_key: str
+    revocation_url: str = field(default=None)
+    verification_url: str = field(default=None)
