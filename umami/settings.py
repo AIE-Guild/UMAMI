@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'umami',
     'guildmaster',
+    'guildmaster.adapters.discord',
     'redirect',
     'allauth',
     'allauth.account',
