@@ -1,8 +1,10 @@
-from django.conf import settings
 from appconf import AppConf
+from django.conf import settings
 
 
 class GuildmasterAppConf(AppConf):
+    STATE_KEY = 'guildmaster_state'
+
     class Meta:
         prefix = 'guildmaster'
 

@@ -1,10 +1,9 @@
-import secrets
-from email.utils import parsedate_tz, mktime_tz
-from typing import Type
 import logging
+import secrets
+from email.utils import mktime_tz, parsedate_tz
+from typing import Type
 
 import requests
-
 from django.conf import settings
 from django.utils import timezone
 

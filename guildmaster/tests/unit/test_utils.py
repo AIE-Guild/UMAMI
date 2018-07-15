@@ -1,10 +1,10 @@
+import datetime as dt
 import math
 import secrets
-import datetime as dt
 
+import django.utils.timezone
 import pytest
 from requests.models import Response
-import django.utils.timezone
 
 from guildmaster import utils
 

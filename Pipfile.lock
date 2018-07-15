@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f99123938601f6aa533ee3d1f6c38ec71860dad0443a083467dc2ef749a75aea"
+            "sha256": "d5bafc8606a75b67dad785a626a8f05bdf2725a69ee5b76d9a75e6958c3174c8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -106,12 +106,27 @@
             "index": "pypi",
             "version": "==2.1.1"
         },
+        "furl": {
+            "hashes": [
+                "sha256:5436226c89536b5fa8c5faa1e34d684d417f69dea91d406edaab102c5da6de8c"
+            ],
+            "index": "pypi",
+            "version": "==1.2"
+        },
         "idna": {
             "hashes": [
                 "sha256:156a6814fb5ac1fc6850fb002e0852d56c0c8d2531923a51032d1b70760e186e",
                 "sha256:684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"
             ],
             "version": "==2.7"
+        },
+        "jsonfield": {
+            "hashes": [
+                "sha256:a0a7fdee736ff049059409752b045281a225610fecbda9b9bd588ba976493c12",
+                "sha256:beb1cd4850d6d6351c32daefcb826c01757744e9c863228a642f87a1a4acb834"
+            ],
+            "index": "pypi",
+            "version": "==2.0.2"
         },
         "markdown": {
             "hashes": [
@@ -133,6 +148,12 @@
                 "sha256:d883b36b21a6ad813953803edfa563b1b579d79ca758fe950d1bc9e8b326025b"
             ],
             "version": "==2.1.0"
+        },
+        "orderedmultidict": {
+            "hashes": [
+                "sha256:b89895ba6438038d0bdf88020ceff876cf3eae0d5c66a69b526fab31125db2c5"
+            ],
+            "version": "==1.0"
         },
         "pillow": {
             "hashes": [

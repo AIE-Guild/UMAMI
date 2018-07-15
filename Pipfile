@@ -16,6 +16,8 @@ environs = "*"
 waitress = "*"
 whitenoise = "*"
 django-markdownx = "*"
+jsonfield = "*"
+furl = "*"
 
 [dev-packages]
 flake8 = "*"
