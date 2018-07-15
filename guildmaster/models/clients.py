@@ -75,15 +75,11 @@ class ClientAdapterManager(models.Manager):
 class Client(models.Model, metaclass=ClientAdapterRegistry):
     """A base class for STI that uses the adapter attribute to distinguish subclass type."""
     DISCORD = 'discord'
-    BN_WOW = 'battle_net_wow'
-    BN_D3 = 'battle_net_d3'
-    BN_SC2 = 'battle_net_sc2'
+    BATTLE_NET = 'battle_net'
     EVE = 'eve_online'
     ADAPTER_CHOICES = (
         (DISCORD, 'Discord'),
-        (BN_WOW, 'Battle.net - World of Warcraft'),
-        (BN_D3, 'Battle.net - Diablo 3'),
-        (BN_SC2, 'Battle.net - Starcraft 2'),
+        (BATTLE_NET, 'Battle.net'),
         (EVE, 'EVE Online')
     )
 

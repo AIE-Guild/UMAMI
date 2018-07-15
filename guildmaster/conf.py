@@ -9,4 +9,4 @@ class GuildmasterAppConf(AppConf):
         prefix = 'guildmaster'
 
     def ready(self):
-        import guildmaster.conf  # noqa
+        import guildmaster.conf  # pragma: no cover noqa
