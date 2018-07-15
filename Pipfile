@@ -23,6 +23,7 @@ isort = "*"
 pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
+pytest-mock = "*"
 
 [requires]
 python_version = "3.7"
