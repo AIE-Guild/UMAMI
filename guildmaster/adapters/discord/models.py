@@ -1,6 +1,6 @@
 from django.db import models
 
-from guildmaster.models.clients import Client
+from guildmaster.models.clients import Client, ClientAdapterControl
 
 
 class DiscordClientManager(models.Manager):
@@ -9,12 +9,14 @@ class DiscordClientManager(models.Manager):
 
 
 class DiscordClient(Client):
-    adapter_id = Client.DISCORD
-    authorization_url = 'https://discordapp.com/api/oauth2/authorize'
-    token_url = 'https://discordapp.com/api/oauth2/token'
-    revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
-    resource_url = 'https://discordapp.com/api/users/@me'
-    resource_key = 'id'
+    _control = ClientAdapterControl(
+        id=Client.DISCORD,
+        authorization_url='https://discordapp.com/api/oauth2/authorize',
+        token_url='https://discordapp.com/api/oauth2/token',
+        revocation_url='https://discordapp.com/api/oauth2/token/revoke',
+        resource_url='https://discordapp.com/api/users/@me',
+        resource_key='id'
+    )
 
     objects = DiscordClientManager()
 

@@ -1,11 +1,11 @@
 import logging
 import uuid
-from typing import List, Type
+from dataclasses import dataclass
+from typing import List, TypeVar
 
 import jsonfield
 import requests
 from concurrency.fields import AutoIncVersionField
-from django import http
 from django.conf import settings
 from django.db import models
 from django.db.models.base import ModelBase
@@ -18,6 +18,10 @@ from guildmaster.utils import generate_state
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+C = TypeVar('C', bound='Client')
+R = TypeVar('R', bound='http.HTTPRequest')
+S = TypeVar('S', bound='requests.Session')
+
 
 class ClientAdapterRegistry(ModelBase):
     """A client subclass registry implemented as a metaclass."""
@@ -27,11 +31,12 @@ class ClientAdapterRegistry(ModelBase):
         if not hasattr(cls, '_registry'):
             cls._registry = {}
         else:
-            if cls.adapter_id in cls._registry:
-                raise ValueError('duplicate adapter type: {}'.format(cls.adapter_id))
-            cls._registry[cls.adapter_id] = cls
+            key = cls._control.id
+            if key in cls._registry:
+                raise ValueError('duplicate adapter type: {}'.format(key))
+            cls._registry[key] = cls
 
-    def _adapter_class(cls, key: str) -> Type[models.Model]:
+    def _adapter_class(cls, key: str) -> C:
         """Map a client adapter ID to the class.
 
         Args:
@@ -46,7 +51,7 @@ class ClientAdapterRegistry(ModelBase):
             return
 
     @property
-    def _adapter_classes(cls) -> List[Type[models.Model]]:
+    def _adapter_classes(cls) -> List[C]:
         """The list of adapted clients.
 
         Returns: All registered client subclasses.
@@ -102,15 +107,35 @@ class Client(models.Model, metaclass=ClientAdapterRegistry):
         return self.name
 
     @property
+    def authorization_url(self):
+        return self._control.authorization_url
+
+    @property
+    def token_url(self):
+        return self._control.token_url
+
+    @property
+    def revocation_url(self):
+        return self._control.revocation_url
+
+    @property
+    def resource_url(self):
+        return self._control.resource_url
+
+    @property
+    def resource_key(self):
+        return self._control.resource_key
+
+    @property
     def scope(self) -> str:
         return ' '.join([str(x) for x in self.scopes.all()])
 
-    def authorization_code(self, request: Type[http.HttpRequest]) -> str:
+    def authorization_code(self, request: R) -> str:
         code = request.GET['code']
         logger.debug('extracted authorization code: %s', code)
         return code
 
-    def authorization_redirect(self, request: Type[http.HttpRequest], redirect_uri: str, state: str = None) -> str:
+    def authorization_redirect(self, request: R, redirect_uri: str, state: str = None) -> str:
         if state is None:
             state = generate_state()
         request.session[settings.GUILDMASTER_STATE_KEY] = state
@@ -124,9 +149,9 @@ class Client(models.Model, metaclass=ClientAdapterRegistry):
         })
         return url.url
 
-    def token_fetch(self, request: Type[http.HttpRequest], session: Type[requests.Session] = None):
+    def token_fetch(self, request: R, redirect_uri: str, session: S = None):
         self._validate_state(request)
-        token_request = self._prepare_token_request(request)
+        token_request = self._prepare_token_request(request, redirect_uri)
         if session is None:
             session = requests.Session()
         try:
@@ -150,11 +175,11 @@ class Client(models.Model, metaclass=ClientAdapterRegistry):
             logger.error(msg)
             raise ValueError(msg)
 
-    def _prepare_token_request(self, request):
+    def _prepare_token_request(self, request, redirect_uri: str):
         payload = {
             'grant_type': 'authorization_code',
             'code': self.authorization_code(request),
-            'redirect_uri': self.redirect_url(request),
+            'redirect_uri': redirect_uri,
             'client_id': self.client_id,
             'client_secret': self.client_secret,
         }
@@ -174,3 +199,13 @@ class ClientScope(models.Model):
 
     def __str__(self):
         return self.name
+
+
+@dataclass(frozen=True)
+class ClientAdapterControl:
+    id: str
+    authorization_url: str
+    token_url: str
+    revocation_url: str
+    resource_url: str
+    resource_key: str
