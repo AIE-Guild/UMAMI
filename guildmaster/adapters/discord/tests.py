@@ -3,7 +3,7 @@ from guildmaster.adapters.discord.models import DiscordClient
 
 
 def test_load():
-    assert Client._adapter_class('discord') == DiscordClient
+    assert Client._adapter_class(DiscordClient._control.id) == DiscordClient
 
 
 def test_manager():

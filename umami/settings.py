@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'umami',
     'guildmaster',
     'guildmaster.adapters.discord',
+    'guildmaster.adapters.eve_online',
     'redirect',
     'allauth',
     'allauth.account',
