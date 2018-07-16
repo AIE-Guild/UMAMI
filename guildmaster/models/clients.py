@@ -12,8 +12,8 @@ from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 from furl import furl
 
-from guildmaster.models import TokenBinding
-from guildmaster.utils import generate_state
+from guildmaster.models.tokens import Token
+from guildmaster.utils import generate_state, parse_http_date
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -160,7 +160,9 @@ class Client(models.Model, metaclass=ClientAdapterRegistry):
         except requests.RequestException as ex:
             logger.error('Communication error: %s', ex)
             raise
-        return TokenBinding(response.json(), user=request.user, client=self)
+        timestamp = parse_http_date(response)
+        token = Token.objects.create_token(response.json(), request.user, self, timestamp)
+        return token
 
     def _validate_state(self, request):
         try:
