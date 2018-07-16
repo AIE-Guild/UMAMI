@@ -42,9 +42,6 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'umami',
     'guildmaster',
-    'guildmaster.adapters.discord',
-    'guildmaster.adapters.battle_net',
-    'guildmaster.adapters.eve_online',
     'redirect',
     'allauth',
     'allauth.account',
@@ -108,7 +105,7 @@ REDIRECT_SECURE = env.bool('REDIRECT_SECURE', True)
 # Services
 #
 DATABASES = {
-    'default': dj_database_url.config(default='sqlite:///test.db', conn_max_age=600)
+    'default': dj_database_url.config(default='sqlite:///db.sqlite3', conn_max_age=600)
 }
 EMAIL_HOST = env('EMAIL_HOST', 'localhost')
 EMAIL_PORT = env.int('EMAIL_PORT', 25)
