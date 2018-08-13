@@ -20,8 +20,3 @@ def test_local_login():
 def test_local_logout():
     resolver = resolve('/accounts/logout/')
     assert resolver.view_name == 'account_logout'
-
-
-def test_discord_login():
-    resolver = resolve('/accounts/discord/login/')
-    assert resolver.view_name == 'discord_login'

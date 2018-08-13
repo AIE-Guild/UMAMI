@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '2.0.0a3'
+__version__ = '2.0.0a4'
 
 default_app_config = 'umami.apps.UMAMIConfig'
