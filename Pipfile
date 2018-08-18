@@ -26,6 +26,7 @@ pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
 pytest-mock = "*"
+coveralls = "*"
 
 [requires]
 python_version = "3.7"
