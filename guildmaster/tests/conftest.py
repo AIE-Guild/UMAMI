@@ -1,10 +1,10 @@
 import pytest
 from django.core.management import call_command
 
-from guildmaster import models
+from guildmaster.adapters import Adapter
 
 
-@pytest.fixture(params=models.Client._adapter_classes, ids=lambda x: x.adapter_id)
+@pytest.fixture(params=Adapter.adapters, ids=lambda x: x.id)
 def adapter(request):
     return request.param
 

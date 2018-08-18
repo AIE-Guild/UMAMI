@@ -4,6 +4,7 @@ from django.contrib import admin
 from guildmaster import forms, models
 
 
+@admin.register(models.Client)
 class ClientAdmin(ConcurrentModelAdmin):
     form = forms.ClientForm
     list_display = ('name', 'adapter', 'slug', 'client_id', 'is_enabled')
@@ -21,23 +22,3 @@ class ClientAdmin(ConcurrentModelAdmin):
         })
     )
     prepopulated_fields = {'slug': ['name']}
-    filter_horizontal = ('scopes',)
-
-
-@admin.register(models.ClientScope)
-class ClientScopeAdmin(ConcurrentModelAdmin):
-    list_display = ('adapter', 'name')
-    list_display_links = ('name',)
-
-
-@admin.register(models.BattleNetClient)
-class BattleNetClientAdmin(ClientAdmin):
-    pass
-
-@admin.register(models.DiscordClient)
-class DiscordClientAdmin(ClientAdmin):
-    pass
-
-@admin.register(models.EveOnlineClient)
-class EveOnlineClientAdmin(ClientAdmin):
-    pass
