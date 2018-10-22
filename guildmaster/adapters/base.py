@@ -1,4 +1,7 @@
 import logging
+from typing import Tuple
+
+from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -50,4 +53,7 @@ class AdapterRegistry(type):
 
 
 class Adapter(object, metaclass=AdapterRegistry):
-    pass
+    scope = tuple()
+
+    def get_authorization_redirect(self, request: HttpRequest) -> Tuple[str, str]:
+        return '', ''

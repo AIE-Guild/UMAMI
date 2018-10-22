@@ -35,7 +35,6 @@ class Client(models.Model):
     is_enabled = models.BooleanField(verbose_name=_('is enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
-    scopes = jsonfield.JSONField(verbose_name=_('scopes'), default='[]')
     options = jsonfield.JSONField(verbose_name=_('options'), blank=True, null=True)
 
     objects = models.Manager()
@@ -69,7 +68,8 @@ class Client(models.Model):
 
     @property
     def scope(self) -> str:
-        return ' '.join([str(x) for x in self.scopes.all()])
+        adapter = Adapter.adapter(self.adapter)
+        return ' '.join([str(x) for x in adapter.scope])
 
     def authorization_code(self, request: R) -> str:
         code = request.GET['code']

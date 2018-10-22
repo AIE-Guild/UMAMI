@@ -1,12 +1,11 @@
 from concurrency.admin import ConcurrentModelAdmin
 from django.contrib import admin
 
-from guildmaster import forms, models
+from guildmaster import models
 
 
 @admin.register(models.Client)
 class ClientAdmin(ConcurrentModelAdmin):
-    form = forms.ClientForm
     list_display = ('name', 'adapter', 'slug', 'client_id', 'is_enabled')
     list_display_links = ('name',)
     fieldsets = (
@@ -14,11 +13,12 @@ class ClientAdmin(ConcurrentModelAdmin):
             'fields': ('adapter', ('name', 'slug', 'version'), 'is_enabled')
         }),
         (('OAuth2 Options', {
-            'fields': ('client_id', 'client_secret', 'scopes')
+            'fields': ('client_id', 'client_secret', 'scope')
         })),
         ('Advanced Options', {
             'classes': ('collapse',),
             'fields': ('options',)
         })
     )
-    prepopulated_fields = {'slug': ['name']}
+    readonly_fields = ('scope',)
+    prepopulated_fields = {'slug': ['adapter']}
