@@ -12,10 +12,7 @@
       "is_enabled": true,
       "client_id": "wJ3PTxnVsszLNRtcx4dOSEaXaaGkgef--kpWl86REuI",
       "client_secret": "xdtojk-Df2hpEuc44moXCsr05DGdaR-4s1vDMwy_7kg",
-      "options": null,
-      "scopes": [
-        "0525cc3d-8a69-4e17-8169-255c23de250c"
-      ]
+      "options": null
     }
   },
   {
@@ -31,11 +28,7 @@
       "is_enabled": true,
       "client_id": "LbQnXYWYhNMmrQ_RPDoceSLbFFeR0nlF0ZwjcokI_MY",
       "client_secret": "AqaVHJDo8RnoinXpzqRR_Yaj434Osw5W9xod-qkUrxQ",
-      "options": null,
-      "scopes": [
-        "4fa675ed-b1e3-4520-a644-020b231d8036",
-        "83f5b160-768b-442a-b831-817c92f94c32"
-      ]
+      "options": null
     }
   },
   {
@@ -51,56 +44,7 @@
       "is_enabled": true,
       "client_id": "PjOTzxaSpaFjy6z1zrFCq3_yHg_OZeXL5UkMzxXDzeo",
       "client_secret": "r0be7XCHzBqOABrNIfgn2ng_z-dkksZffZ7yR7t3ThU",
-      "options": null,
-      "scopes": [
-        "409ea1d7-df69-488f-85dc-028c13248685",
-        "f3a534d2-5942-4456-b93f-1ec7366cce2c"
-      ]
-    }
-  },
-  {
-    "model": "guildmaster.clientscope",
-    "pk": "0525cc3d-8a69-4e17-8169-255c23de250c",
-    "fields": {
-      "version": 2,
-      "adapter": "eve_online",
-      "name": "publicData"
-    }
-  },
-  {
-    "model": "guildmaster.clientscope",
-    "pk": "409ea1d7-df69-488f-85dc-028c13248685",
-    "fields": {
-      "version": 2,
-      "adapter": "battle_net",
-      "name": "wow.profile"
-    }
-  },
-  {
-    "model": "guildmaster.clientscope",
-    "pk": "4fa675ed-b1e3-4520-a644-020b231d8036",
-    "fields": {
-      "version": 2,
-      "adapter": "discord",
-      "name": "email"
-    }
-  },
-  {
-    "model": "guildmaster.clientscope",
-    "pk": "83f5b160-768b-442a-b831-817c92f94c32",
-    "fields": {
-      "version": 2,
-      "adapter": "discord",
-      "name": "identify"
-    }
-  },
-  {
-    "model": "guildmaster.clientscope",
-    "pk": "f3a534d2-5942-4456-b93f-1ec7366cce2c",
-    "fields": {
-      "version": 2,
-      "adapter": "battle_net",
-      "name": "sc2.profile"
+      "options": null
     }
   }
 ]
