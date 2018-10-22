@@ -2,9 +2,9 @@ from guildmaster.adapters import Adapter
 
 
 def test_registry(adapter):
-    assert adapter in Client._adapter_classes
-    assert adapter == Client._adapter_class(adapter._control.id)
+    assert adapter in Adapter.adapters
+    assert adapter == Adapter.adapter(adapter.id)
 
 
 def test_registry_lookup_fail():
-    assert Client._adapter_class('dummy') is None
+    assert Adapter.adapter('dummy') is None
