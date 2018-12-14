@@ -17,8 +17,8 @@ cache:
     - $HOME/.cache/pip
 
 install:
-  - pip install pipenv
-  - pipenv install --dev
+  - pip install poetry==1.0.0a1
+  - poetry update
   - python manage.py migrate --noinput
   - python manage.py collectstatic --noinput
 
