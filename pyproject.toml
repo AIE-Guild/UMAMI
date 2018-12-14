@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "umami"
+version = "2.0.0"
+description = "Universal Multigame AIE Membership Interface"
+authors = ["Mark Rogaski <mrogaski@pobox.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+Django = "^2.1"
+dj-database-url = "^0.5.0"
+django-allauth = "^0.38.0"
+django-appconf = "^1.0"
+django-bootstrap4 = "^0.0.7"
+django-concurrency = "^1.4"
+django-debug-toolbar = "^1.11"
+environs = "^4.1"
+waitress = "^1.1"
+whitenoise = "^4.1"
+django-markdownx = "^2.0"
+psycopg2 = {version = "^2.7",optional = true}
+
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.6"
+isort = "^4.3"
+pytest = "^4.0"
+pytest-django = "^3.4"
+pytest-cov = "^2.6"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
