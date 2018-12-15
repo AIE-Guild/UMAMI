@@ -23,7 +23,7 @@ install:
   - python manage.py collectstatic --noinput
 
 script:
-  - pipenv run pytest
+  - pytest
 
 after_success: coveralls
 
