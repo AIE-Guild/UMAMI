@@ -18,12 +18,12 @@ cache:
 
 install:
   - pip install poetry==1.0.0a1
-  - poetry update
+  - poetry install
   - python manage.py migrate --noinput
   - python manage.py collectstatic --noinput
 
 script:
-  - pipenv run pytest
+  - pytest
 
 after_success: coveralls
 
