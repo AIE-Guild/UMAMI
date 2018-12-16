@@ -1,6 +1,6 @@
 import pytest
 
-DRIVER_DATA = [
+SERVICE_DATA = [
     {
         'name': 'discord',
         'description': 'Discord',
@@ -12,6 +12,6 @@ DRIVER_DATA = [
 ]
 
 
-@pytest.fixture(scope='session', params=DRIVER_DATA, ids=lambda x: x['name'])
-def driver_data(request):
+@pytest.fixture(scope='session', params=SERVICE_DATA, ids=lambda x: x['name'])
+def services(request):
     return request.param

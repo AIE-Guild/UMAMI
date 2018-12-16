@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='Client',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('driver', models.CharField(max_length=50, verbose_name='driver')),
+                ('service', models.CharField(max_length=50, verbose_name='service')),
                 ('name', models.CharField(max_length=50, unique=True, verbose_name='name')),
                 ('enabled', models.BooleanField(default=True, verbose_name='enabled')),
                 ('client_id', models.CharField(max_length=191, verbose_name='client id')),

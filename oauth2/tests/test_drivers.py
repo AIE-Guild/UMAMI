@@ -3,14 +3,14 @@ import pytest
 from oauth2 import drivers
 
 
-def test_driver(driver_data):
-    driver = drivers.ClientDriver.create(driver_data['name'])
-    assert driver.name == driver_data['name']
-    assert driver.description == driver_data['description']
-    assert driver.authorization_url == driver_data['authorization_url']
-    assert driver.token_url == driver_data['token_url']
-    assert driver.revocation_url == driver_data['revocation_url']
-    assert driver.scopes == driver_data['scopes']
+def test_driver(services):
+    driver = drivers.ClientDriver.create(services['name'])
+    assert driver.name == services['name']
+    assert driver.description == services['description']
+    assert driver.authorization_url == services['authorization_url']
+    assert driver.token_url == services['token_url']
+    assert driver.revocation_url == services['revocation_url']
+    assert driver.scopes == services['scopes']
 
 
 def test_registry_conflict():

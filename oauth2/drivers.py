@@ -3,6 +3,7 @@ import abc
 
 class ClientDriver(metaclass=abc.ABCMeta):
     _registry = {}
+    http_basic_auth = True
 
     def __init_subclass__(cls, **kwargs) -> None:
         if cls.name in cls._registry:

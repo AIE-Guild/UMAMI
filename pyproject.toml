@@ -19,6 +19,8 @@ waitress = "^1.1"
 whitenoise = "^4.1"
 django-markdownx = "^2.0"
 psycopg2 = {version = "^2.7",optional = true}
+furl = "^2.0"
+requests = "^2.21"
 
 
 [tool.poetry.dev-dependencies]
