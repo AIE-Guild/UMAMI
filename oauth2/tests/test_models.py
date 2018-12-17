@@ -1,6 +1,8 @@
 import secrets
+import base64
 
 import pytest
+import requests
 
 from oauth2 import models
 from oauth2 import exceptions
@@ -77,3 +79,43 @@ def test_authorization_response_error(client, rf):
     assert exc.value.error == data['error']
     assert exc.value.description == data['error_description']
     assert exc.value.uri == data['error_uri']
+
+
+def test_token_request(client, services, rf):
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', data=data)
+    token_request = client.get_token_request(request)
+    assert token_request.url == services['token_url']
+    assert token_request.headers['Authorization'] == 'Basic {}'.format(
+        base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()
+    )
+    assert 'grant_type' in token_request.body
+    assert 'code' in token_request.body
+    assert 'redirect_uri' in token_request.body
+    assert 'client_id' in token_request.body
+    assert 'client_secret' not in token_request.body
+
+
+def test_token_request_noauth(client, services, rf):
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', data=data)
+    token_request = client.get_token_request(request)
+    assert token_request.url == services['token_url']
+    if client.driver.http_basic_auth:
+        assert token_request.headers['Authorization'] == 'Basic {}'.format(
+            base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()
+        )
+        assert 'client_secret' not in token_request.body
+    else:
+        assert 'Authorization' not in token_request.headers
+        assert 'client_secret' in token_request.body
+    assert 'grant_type' in token_request.body
+    assert 'code' in token_request.body
+    assert 'redirect_uri' in token_request.body
+    assert 'client_id' in token_request.body

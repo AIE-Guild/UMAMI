@@ -72,7 +72,7 @@ class Client(models.Model):
         }
         if self.driver.http_basic_auth:
             auth = (self.client_id, self.client_secret)
-        else:
+        else:  # pragma: no cover
             auth = None
             data['client_secret'] = self.client_secret
         r = requests.Request('POST', self.driver.token_url, data=data, auth=auth)
