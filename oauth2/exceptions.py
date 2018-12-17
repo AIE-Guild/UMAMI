@@ -6,6 +6,7 @@ class OAuth2Error(Exception):
 
     def __init__(self, error: str, description: Optional[str] = None, uri: Optional[str] = None) -> None:
         super().__init__(error)
+        self.error = error
         self.description = description
         self.uri = uri
 

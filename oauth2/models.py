@@ -49,7 +49,11 @@ class Client(models.Model):
         target.args['state'] = state
         return target.url, state
 
-    def validate_authorization_response(self, request: HttpRequest, state: Optional[str] = None) -> None:
+    def validate_authorization_response(self, request: HttpRequest, state: str) -> None:
+        if state != request.GET['state']:
+            msg = f"state mismatch: '{request.GET['state']}' received, '{state}' expected."
+            logger.error(msg)
+            raise ValueError(msg)
         if 'error' in request.GET:
             error = request.GET['error']
             logger.error(f'Oauth2 authorization error: {error}')
@@ -58,11 +62,6 @@ class Client(models.Model):
                 description=request.GET.get('error_description'),
                 uri=request.GET.get('error_uri')
             )
-        if state is not None:
-            if state != request.GET['state']:
-                msg = f"state mismatch: '{request.GET['state']}' received, '{state}' expected."
-                logger.error(msg)
-                raise ValueError(msg)
 
     def get_token_request(self, request: HttpRequest) -> requests.PreparedRequest:
         data = {
