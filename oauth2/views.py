@@ -1,5 +1,6 @@
 import logging
 
+import requests
 from django.conf import settings
 from django.views.generic import base
 from django import http
@@ -53,5 +54,8 @@ class TokenView(base.View):
         except exceptions.OAuth2Error as exc:
             logger.warning(exc)
             return http.HttpResponseForbidden(exc)
+
+        s = requests.Session()
+        response = s.send(client.get_token_request(request))
 
         return http.HttpResponseRedirect(return_url)

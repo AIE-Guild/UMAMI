@@ -2,6 +2,7 @@ import secrets
 
 import pytest
 from django.urls import reverse
+from django.contrib.auth.models import User
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.utils.http import urlencode
 
@@ -61,7 +62,15 @@ def test_authorization_return_url(rf, add_rf_session, client_obj, settings):
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
 
 
-def test_token(rf, settings, add_rf_session, client_obj):
+def test_token(rf, settings, add_rf_session, client_obj, requests_mock):
+    user = User.objects.create(username='ralff', email='ralff@aie-guild.org')
+    expected = {
+        'access_token': secrets.token_urlsafe(64),
+        'refresh_token': secrets.token_urlsafe(64),
+        'token_type': 'bearer',
+        'expires_in': 3600,
+    }
+    requests_mock.post(client_obj.driver.token_url, json=expected)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
@@ -69,9 +78,14 @@ def test_token(rf, settings, add_rf_session, client_obj):
         {'code': code, 'state': state}
     )
     request = add_rf_session(request)
+    request.user = user
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
     response = views.TokenView.as_view()(request, client_name=client_obj.name)
     assert response.status_code == 302
+    assert requests_mock.called
+    assert requests_mock.call_count == 1
+    assert requests_mock.last_request.method == 'POST'
+    assert requests_mock.last_request.url == client_obj.driver.token_url
 
 
 def test_token_error(rf, settings, add_rf_session, client_obj):
