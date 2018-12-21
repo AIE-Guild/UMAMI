@@ -6,7 +6,7 @@ from typing import Optional, Tuple, Dict
 import requests
 from django.conf import settings
 from django.db import models
-from django.http import HttpRequest
+from django import http
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from furl import furl
@@ -20,7 +20,7 @@ logger.addHandler(logging.NullHandler())
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     service = models.CharField(verbose_name=_('service'), max_length=50)
-    name = models.CharField(verbose_name=_('name'), unique=True, max_length=50)
+    name = models.SlugField(verbose_name=_('name'), unique=True, max_length=50)
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
@@ -38,18 +38,19 @@ class Client(models.Model):
     def driver(self) -> drivers.ClientDriver:
         return drivers.ClientDriver.create(self.service)
 
-    def get_authorization_request(self, request: HttpRequest, state: Optional[str] = None) -> Tuple[str, str]:
+    def get_authorization_request(self, request: http.HttpRequest, state: Optional[str] = None) -> Tuple[str, str]:
         target = furl(self.driver.authorization_url)
         if state is None:
             state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
         target.args['response_type'] = 'code'
         target.args['client_id'] = self.client_id
-        target.args['redirect_uri'] = utils.exposed_url(request, path=reverse('oauth2:token'))
+        target.args['redirect_uri'] = utils.exposed_url(request,
+                                                        path=reverse('oauth2:token', kwargs={'client_name': self.name}))
         target.args['scope'] = ' '.join(self.scopes)
         target.args['state'] = state
         return target.url, state
 
-    def validate_authorization_response(self, request: HttpRequest, state: str) -> None:
+    def validate_authorization_response(self, request: http.HttpRequest, state: str) -> None:
         if state != request.GET['state']:
             msg = f"state mismatch: '{request.GET['state']}' received, '{state}' expected."
             logger.error(msg)
@@ -63,11 +64,11 @@ class Client(models.Model):
                 uri=request.GET.get('error_uri')
             )
 
-    def get_token_request(self, request: HttpRequest) -> requests.PreparedRequest:
+    def get_token_request(self, request: http.HttpRequest) -> requests.PreparedRequest:
         data = {
             'grant_type': 'authorization_code',
             'code': request.GET['code'],
-            'redirect_uri': utils.exposed_url(request, path=reverse('oauth2:token')),
+            'redirect_uri': utils.exposed_url(request, path=reverse('oauth2:token', kwargs={'client_name': self.name})),
             'client_id': self.client_id
         }
         if self.driver.http_basic_auth:

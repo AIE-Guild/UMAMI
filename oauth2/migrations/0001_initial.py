@@ -1,8 +1,7 @@
-import uuid
-
-import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+import django.db.models.deletion
+import uuid
 
 
 class Migration(migrations.Migration):
@@ -18,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('service', models.CharField(max_length=50, verbose_name='service')),
-                ('name', models.CharField(max_length=50, unique=True, verbose_name='name')),
+                ('name', models.SlugField(unique=True, verbose_name='name')),
                 ('enabled', models.BooleanField(default=True, verbose_name='enabled')),
                 ('client_id', models.CharField(max_length=191, verbose_name='client id')),
                 ('client_secret', models.CharField(max_length=191, verbose_name='client secret')),
