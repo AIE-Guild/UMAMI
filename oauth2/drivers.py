@@ -16,6 +16,14 @@ class ClientDriver(metaclass=abc.ABCMeta):
     def create(cls, name) -> 'ClientDriver':
         return cls._registry[name]()
 
+    @classmethod
+    def get_driver_names(cls):
+        return [x for x in cls._registry]
+
+    @classmethod
+    def get_drivers(cls):
+        return cls._registry.values()
+
     @property
     @abc.abstractmethod
     def name(self) -> str:
@@ -54,3 +62,13 @@ class DiscordDriver(ClientDriver):
     token_url = 'https://discordapp.com/api/oauth2/token'
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
     scopes = ('identity', 'email')
+
+
+class BattleNetDriver(ClientDriver):
+    name = 'battle_net'
+    description = 'Battle.net'
+    authorization_url = 'https://us.battle.net/oauth/authorize'
+    token_url = 'https://us.battle.net/oauth/token'
+    verification_url = 'https://us.battle.net/oauth/check_token'
+    revocation_url = None
+    scopes = ('wow.profile', 'sc2.profile')

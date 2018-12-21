@@ -9,9 +9,9 @@ from oauth2 import exceptions
 
 
 @pytest.fixture()
-def client(services):
+def client(service):
     return models.Client.objects.create(
-        service=services['name'],
+        service=service.name,
         name='test_client',
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16)
@@ -81,14 +81,14 @@ def test_authorization_response_error(client, rf):
     assert exc.value.uri == data['error_uri']
 
 
-def test_token_request(client, services, rf):
+def test_token_request(client, service, rf):
     data = {
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
     request = rf.get('/auth/token', data=data)
     token_request = client.get_token_request(request)
-    assert token_request.url == services['token_url']
+    assert token_request.url == service.token_url
     assert token_request.headers['Authorization'] == 'Basic {}'.format(
         base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()
     )
@@ -99,14 +99,14 @@ def test_token_request(client, services, rf):
     assert 'client_secret' not in token_request.body
 
 
-def test_token_request_noauth(client, services, rf):
+def test_token_request_noauth(client, service, rf):
     data = {
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
     request = rf.get('/auth/token', data=data)
     token_request = client.get_token_request(request)
-    assert token_request.url == services['token_url']
+    assert token_request.url == service.token_url
     if client.driver.http_basic_auth:
         assert token_request.headers['Authorization'] == 'Basic {}'.format(
             base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()

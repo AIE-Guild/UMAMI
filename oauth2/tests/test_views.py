@@ -5,14 +5,15 @@ from django.urls import reverse
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.utils.http import urlencode
 
+from oauth2 import drivers
 from oauth2 import models
 from oauth2 import views
 
 
-@pytest.fixture()
-def client_obj(services):
+@pytest.fixture(params=drivers.ClientDriver.get_driver_names())
+def client_obj(request):
     return models.Client.objects.create(
-        service=services['name'],
+        service=request.param,
         name='test_client',
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16)
@@ -60,9 +61,40 @@ def test_authorization_return_url(rf, add_rf_session, client_obj, settings):
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
 
 
-@pytest.mark.xfail()
-def test_token(rf, add_rf_session, client_obj):
-    request = rf.get(reverse('oauth2:token', kwargs={'client_name': 'test'}))
+def test_token(rf, settings, add_rf_session, client_obj):
+    code = secrets.token_urlsafe(64)
+    state = secrets.token_urlsafe(64)
+    request = rf.get(
+        reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
+        {'code': code, 'state': state}
+    )
     request = add_rf_session(request)
-    response = views.TokenView.as_view()(request)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
+    response = views.TokenView.as_view()(request, client_name=client_obj.name)
     assert response.status_code == 302
+
+
+def test_token_error(rf, settings, add_rf_session, client_obj):
+    code = secrets.token_urlsafe(64)
+    state = secrets.token_urlsafe(64)
+    request = rf.get(
+        reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
+        {'error': 'access_denied', 'state': state}
+    )
+    request = add_rf_session(request)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
+    response = views.TokenView.as_view()(request, client_name=client_obj.name)
+    assert response.status_code == 403
+
+
+def test_token_bogus(rf, settings, add_rf_session, client_obj):
+    code = secrets.token_urlsafe(64)
+    state = secrets.token_urlsafe(64)
+    request = rf.get(
+        reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
+        {'code': code, 'state': state}
+    )
+    request = add_rf_session(request)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_urlsafe(64)
+    response = views.TokenView.as_view()(request, client_name=client_obj.name)
+    assert response.status_code == 403

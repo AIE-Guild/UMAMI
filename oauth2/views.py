@@ -5,6 +5,7 @@ from django.views.generic import base
 from django import http
 
 from oauth2 import models
+from oauth2 import exceptions
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -44,6 +45,13 @@ class TokenView(base.View):
         return_url = request.session.get(settings.OAUTH2_SESSION_RETURN_KEY)
         logger.debug(f'fetched from session: state={state}, return_url={return_url}')
 
-        client.validate_authorization_response(request)
+        try:
+            client.validate_authorization_response(request, state=state)
+        except ValueError as exc:
+            logger.error(exc)
+            return http.HttpResponseForbidden(exc)
+        except exceptions.OAuth2Error as exc:
+            logger.warning(exc)
+            return http.HttpResponseForbidden(exc)
 
         return http.HttpResponseRedirect(return_url)
