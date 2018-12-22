@@ -2,8 +2,8 @@ import secrets
 
 import pytest
 from django.contrib.auth.models import User
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import urlencode
 
 from oauth2 import drivers, models, views
@@ -58,7 +58,10 @@ def test_token(rf, settings, user, client_obj, requests_mock):
         'token_type': 'bearer',
         'expires_in': 3600,
     }
-    requests_mock.post(client_obj.driver.token_url, json=expected)
+    requests_mock.post(
+        client_obj.driver.token_url,
+        json=expected,
+        headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')})
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(

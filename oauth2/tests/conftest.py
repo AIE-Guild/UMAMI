@@ -2,6 +2,7 @@ import collections.abc as collections
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import RequestFactory
 from django.utils import timezone
@@ -29,6 +30,8 @@ def rf(rf):
                 for key in headers:
                     request.META[key] = headers[key]
             middleware = SessionMiddleware()
+            middleware.process_request(request)
+            middleware = MessageMiddleware()
             middleware.process_request(request)
             request.session.save()
             return request

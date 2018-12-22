@@ -63,12 +63,13 @@ class ClientDriver(metaclass=abc.ABCMeta):
 
 
 class DiscordDriver(ClientDriver):
+    http_basic_auth = False
     name = 'discord'
     description = 'Discord'
     authorization_url = 'https://discordapp.com/api/oauth2/authorize'
     token_url = 'https://discordapp.com/api/oauth2/token'
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
-    scopes = ('identity', 'email')
+    scopes = ('identify', 'email')
 
 
 class BattleNetDriver(ClientDriver):

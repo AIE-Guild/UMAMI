@@ -204,7 +204,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': env('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
         },
         'django.template': {
             'handlers': ['null'],
@@ -213,6 +213,6 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': env('DJANGO_LOG_LEVEL', 'INFO'),
+        'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
     }
 }

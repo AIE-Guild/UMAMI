@@ -3,6 +3,7 @@ import logging
 import secrets
 import uuid
 from typing import Optional, Tuple
+from urllib import parse
 
 import requests
 from django import http
@@ -27,6 +28,9 @@ class Client(models.Model):
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
     scope_override = models.TextField(verbose_name=_('scope override'), blank=True, default='')
 
+    def __str__(self):
+        return self.name
+
     @property
     def scopes(self) -> tuple:
         driver = drivers.ClientDriver.create(self.service)
@@ -49,15 +53,18 @@ class Client(models.Model):
             return
 
     def get_authorization_request(self, request: http.HttpRequest, state: Optional[str] = None) -> Tuple[str, str]:
-        target = furl(self.driver.authorization_url)
+        target = parse.urlsplit(self.driver.authorization_url)
         if state is None:
             state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
-        target.args['response_type'] = 'code'
-        target.args['client_id'] = self.client_id
-        target.args['redirect_uri'] = utils.exposed_url(request, path=self.callback)
-        target.args['scope'] = ' '.join(self.scopes)
-        target.args['state'] = state
-        return target.url, state
+        args = {
+            'response_type': 'code',
+            'client_id': self.client_id,
+            'redirect_uri': utils.exposed_url(request, path=self.callback),
+            'scope': ' '.join(self.scopes),
+            'state': state
+        }
+        target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
+        return parse.urlunsplit(target), state
 
     def validate_authorization_response(self, request: http.HttpRequest, state: str) -> None:
         if state != request.GET['state']:
@@ -128,3 +135,6 @@ class Token(models.Model):
 
     class Meta:
         unique_together = ('user', 'client')
+
+    def __str__(self):
+        return str(self.id)

@@ -87,14 +87,17 @@ def test_token_request(client, service, rf):
     request = rf.get('/auth/token', data=data)
     token_request = client.get_token_request(request)
     assert token_request.url == service.token_url
-    assert token_request.headers['Authorization'] == 'Basic {}'.format(
-        base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()
-    )
-    assert 'grant_type' in token_request.body
-    assert 'code' in token_request.body
-    assert 'redirect_uri' in token_request.body
-    assert 'client_id' in token_request.body
-    assert 'client_secret' not in token_request.body
+    if client.driver.http_basic_auth:
+        assert token_request.headers['Authorization'] == 'Basic {}'.format(
+            base64.b64encode(f'{client.client_id}:{client.client_secret}'.encode()).decode()
+        )
+        assert 'client_secret=' not in token_request.body
+    else:
+        assert f'client_secret={client.client_secret}' in token_request.body
+    assert 'grant_type=' in token_request.body
+    assert 'code=' in token_request.body
+    assert 'redirect_uri=' in token_request.body
+    assert f'client_id={client.client_id}' in token_request.body
 
 
 def test_token_request_noauth(client, service, rf):
