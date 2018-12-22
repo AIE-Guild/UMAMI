@@ -36,19 +36,6 @@ def test_scope_override(client):
     assert client.scopes == ('foo', 'bar', 'baz')
 
 
-def test_authorization_request(client, rf):
-    driver = client.driver
-    request = rf.get('/')
-    url, state = client.get_authorization_request(request)
-    assert url.startswith(driver.authorization_url)
-    assert 'response_type=code' in url
-    assert f'client_id={client.client_id}' in url
-    assert f'state={state}' in url
-
-    url, state = client.get_authorization_request(request, 'foobar')
-    assert f'state=foobar' in url
-
-
 def test_authorization_response_state(client, rf):
     data = {
         'code': secrets.token_urlsafe(16),

@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import base
 
-from oauth2 import exceptions, models
+from oauth2 import exceptions, models, workflows
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -18,17 +18,14 @@ class AuthorizationView(LoginRequiredMixin, base.View):
 
     def get(self, request, *args, **kwargs):
         name = kwargs.get('client_name')
-        return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME, settings.OAUTH2_RETURN_URL)
         try:
             client = models.Client.objects.get(name=name)
         except models.Client.DoesNotExist:
-            logger.error(f'No client found: {name}')
+            logger.error('No client found: %s', name)
             return http.HttpResponseServerError()
-        url, state = client.get_authorization_request(request)
-        logger.debug(f'storing to session: state={state}, return_url={return_url}')
-        request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
-        request.session[settings.OAUTH2_SESSION_RETURN_KEY] = return_url
-        logger.debug(f'Redirecting to: {url}')
+        return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME)
+        url = workflows.get_authorization_url(request, client, return_url)
+        logger.info('Redirecting to: %s', url)
         return http.HttpResponseRedirect(url)
 
 

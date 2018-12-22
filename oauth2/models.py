@@ -11,7 +11,6 @@ from django.conf import settings
 from django.db import models, transaction
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
-from furl import furl
 
 from oauth2 import drivers, exceptions, utils
 
@@ -51,20 +50,6 @@ class Client(models.Model):
             return reverse('oauth2:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
             return
-
-    def get_authorization_request(self, request: http.HttpRequest, state: Optional[str] = None) -> Tuple[str, str]:
-        target = parse.urlsplit(self.driver.authorization_url)
-        if state is None:
-            state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
-        args = {
-            'response_type': 'code',
-            'client_id': self.client_id,
-            'redirect_uri': utils.exposed_url(request, path=self.callback),
-            'scope': ' '.join(self.scopes),
-            'state': state
-        }
-        target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
-        return parse.urlunsplit(target), state
 
     def validate_authorization_response(self, request: http.HttpRequest, state: str) -> None:
         if state != request.GET['state']:

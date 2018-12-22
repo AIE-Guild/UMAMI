@@ -1,7 +1,9 @@
 import collections.abc as collections
+import datetime as dt
 import secrets
 
 import pytest
+import pytz
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -40,7 +42,7 @@ def rf(rf):
     return UserSessionRequestFactory()
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def response_factory():
     class Response:
         class Headers(collections.MutableMapping):
@@ -78,6 +80,17 @@ def response_factory():
         return Response(data, date=date)
 
     return factory
+
+
+@pytest.fixture(scope='session')
+def sample_datestr():
+    return 'Sun, 12 Jan 1997 12:00:00 UTC'
+
+
+@pytest.fixture(scope='session')
+def sample_date():
+    date = dt.datetime(1997, 1, 12, 12, 00, 00, 0)
+    return pytz.timezone(timezone.get_default_timezone_name()).localize(date)
 
 
 @pytest.fixture()

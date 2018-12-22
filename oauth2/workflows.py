@@ -1,23 +1,21 @@
-from dataclasses import dataclass, field
 import datetime as dt
 import logging
-import email.utils as eut
+import secrets
 from typing import Optional
+from urllib import parse
 
-import pytz
 import requests
+from django import http
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from dataclasses import dataclass, field
+from oauth2 import utils
 from oauth2.models import Client
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-
-def parse_http_date(text: str) -> dt.datetime:
-    date = dt.datetime(*eut.parsedate(text)[:6])
-    return pytz.timezone(timezone.get_default_timezone_name()).localize(date)
 
 
 @dataclass()
@@ -42,7 +40,28 @@ class TokenData:
 
     @classmethod
     def from_response(cls, user: User, client: Client, response: requests.Response) -> 'TokenData':
-        ts = response.headers['Date']
+        ts = utils.parse_http_date(response.headers['Date'])
         whitelist = ('access_token', 'token_type', 'refresh_token', 'expires_in')
         args = {k: v for k, v in response.json().items() if k in whitelist}
         return cls(user, client, timestamp=ts, **args)
+
+
+def get_authorization_url(request: http.HttpRequest, client: Client, return_url: Optional[str] = None) -> str:
+    target = parse.urlsplit(client.driver.authorization_url)
+    state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
+    if return_url is None:
+        return_url = settings.OAUTH2_RETURN_URL
+    args = {
+        'response_type': 'code',
+        'client_id': client.client_id,
+        'redirect_uri': utils.exposed_url(request, path=client.callback),
+        'scope': ' '.join(client.scopes),
+        'state': state
+    }
+    target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
+    result = parse.urlunsplit(target)
+    logger.debug('built authorization URL: %s', result)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
+    request.session[settings.OAUTH2_SESSION_RETURN_KEY] = return_url
+    logger.debug('storing session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
+    return result
