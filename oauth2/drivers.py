@@ -14,7 +14,10 @@ class ClientDriver(metaclass=abc.ABCMeta):
 
     @classmethod
     def create(cls, name) -> 'ClientDriver':
-        return cls._registry[name]()
+        try:
+            return cls._registry[name]()
+        except KeyError:
+            return
 
     @classmethod
     def get_driver_names(cls):
@@ -23,6 +26,10 @@ class ClientDriver(metaclass=abc.ABCMeta):
     @classmethod
     def get_drivers(cls):
         return cls._registry.values()
+
+    @classmethod
+    def get_choices(cls):
+        return [(x.name, x.description) for x in cls.get_drivers()]
 
     @property
     @abc.abstractmethod

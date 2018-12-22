@@ -2,14 +2,13 @@ import datetime as dt
 import logging
 import secrets
 import uuid
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 import requests
 from django import http
 from django.conf import settings
 from django.db import models, transaction
-from django.urls import reverse
-from django.utils import dateparse
+from django.urls import reverse, NoReverseMatch
 from django.utils.translation import ugettext_lazy as _
 from furl import furl
 
@@ -21,16 +20,18 @@ logger.addHandler(logging.NullHandler())
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    service = models.CharField(verbose_name=_('service'), max_length=50)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=50)
+    service = models.CharField(verbose_name=_('service'), max_length=50, choices=drivers.ClientDriver.get_choices())
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
-    scope_override = models.TextField(verbose_name=_('scope override'))
+    scope_override = models.TextField(verbose_name=_('scope override'), blank=True, default='')
 
     @property
     def scopes(self) -> tuple:
         driver = drivers.ClientDriver.create(self.service)
+        if driver is None:
+            return
         if self.scope_override:
             return tuple(self.scope_override.split())
         else:
@@ -40,14 +41,20 @@ class Client(models.Model):
     def driver(self) -> drivers.ClientDriver:
         return drivers.ClientDriver.create(self.service)
 
+    @property
+    def callback(self):
+        try:
+            return reverse('oauth2:token', kwargs={'client_name': self.name})
+        except NoReverseMatch:
+            return
+
     def get_authorization_request(self, request: http.HttpRequest, state: Optional[str] = None) -> Tuple[str, str]:
         target = furl(self.driver.authorization_url)
         if state is None:
             state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
         target.args['response_type'] = 'code'
         target.args['client_id'] = self.client_id
-        target.args['redirect_uri'] = utils.exposed_url(request,
-                                                        path=reverse('oauth2:token', kwargs={'client_name': self.name}))
+        target.args['redirect_uri'] = utils.exposed_url(request, path=self.callback)
         target.args['scope'] = ' '.join(self.scopes)
         target.args['state'] = state
         return target.url, state
@@ -85,7 +92,7 @@ class Client(models.Model):
 class TokenManager(models.Manager):
     def extract(self, user, client, response: requests.Response) -> 'Token':
         def expiry(date_header, expires_in=None):
-            current = utils.parse_http_date(response.headers['Date'])
+            current = utils.parse_http_date(date_header)
             if expires_in is None:
                 return
             target = current + dt.timedelta(seconds=int(expires_in))
