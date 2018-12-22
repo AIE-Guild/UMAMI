@@ -39,6 +39,10 @@ class Client(models.Model):
             return driver.scopes
 
     @property
+    def description(self):
+        return self.driver.description
+
+    @property
     def driver(self) -> drivers.ClientDriver:
         return drivers.ClientDriver.create(self.service)
 
@@ -48,21 +52,6 @@ class Client(models.Model):
             return reverse('oauth2:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
             return
-
-    def get_token_request(self, request: http.HttpRequest) -> requests.PreparedRequest:
-        data = {
-            'grant_type': 'authorization_code',
-            'code': request.GET['code'],
-            'redirect_uri': utils.exposed_url(request, path=reverse('oauth2:token', kwargs={'client_name': self.name})),
-            'client_id': self.client_id
-        }
-        if self.driver.http_basic_auth:
-            auth = (self.client_id, self.client_secret)
-        else:  # pragma: no cover
-            auth = None
-            data['client_secret'] = self.client_secret
-        r = requests.Request('POST', self.driver.token_url, data=data, auth=auth)
-        return r.prepare()
 
 
 class TokenManager(models.Manager):
@@ -79,7 +68,7 @@ class TokenManager(models.Manager):
         attrs = {
             'token_type': data['token_type'],
             'access_token': data['access_token'],
-            'refresh_token': data.get('refresh_token'),
+            'refresh_token': data.get('refresh_token', ''),
             'expiry': expiry(response.headers['Date'], data.get('expires_in'))
         }
         with transaction.atomic():
@@ -97,7 +86,7 @@ class Token(models.Model):
     client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.CASCADE)
     token_type = models.CharField(verbose_name=_('token type'), max_length=50, default='bearer')
     access_token = models.TextField(verbose_name=_('access token'))
-    refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True)
+    refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
 
     objects = TokenManager()

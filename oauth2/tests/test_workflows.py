@@ -2,8 +2,9 @@ import datetime as dt
 import secrets
 
 import pytest
+import requests
 
-from oauth2 import exceptions, workflows
+from oauth2 import exceptions, workflows, models
 
 
 @pytest.fixture(scope='session')
@@ -92,3 +93,26 @@ def test_authorization_response_error(rf, sample_client, settings):
     assert exc.value.error == data['error']
     assert exc.value.description == data['error_description']
     assert exc.value.uri == data['error_uri']
+
+
+def test_fetch_tokens(rf, sample_client, requests_mock, token_response, sample_datestr, sample_user):
+    requests_mock.post(sample_client.driver.token_url, json=token_response, headers={'Date': sample_datestr})
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', username=sample_user, data=data)
+    token = workflows.fetch_tokens(request, sample_client)
+    assert isinstance(token, models.Token)
+    assert token.access_token == token_response['access_token']
+
+
+def test_fetch_tokens_failure(rf, sample_client, requests_mock, token_response, sample_datestr, sample_user):
+    requests_mock.post(sample_client.driver.token_url, exc=requests.ConnectionError())
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', username=sample_user, data=data)
+    with pytest.raises(IOError):
+        workflows.fetch_tokens(request, sample_client)

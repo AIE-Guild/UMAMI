@@ -1,6 +1,5 @@
 import logging
 
-import requests
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -40,10 +39,6 @@ class TokenView(LoginRequiredMixin, base.View):
             logger.error('No client found: %s', name)
             return http.HttpResponseServerError()
 
-        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
-        return_url = request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)
-        logger.debug(f'fetched from session: state={state}, return_url={return_url}')
-
         try:
             workflows.validate_authorization_response(request, client)
         except ValueError as exc:
@@ -53,18 +48,10 @@ class TokenView(LoginRequiredMixin, base.View):
             logger.warning(exc)
             return http.HttpResponseForbidden(exc)
 
-        s = requests.Session()
         try:
-            token_request = client.get_token_request(request)
-            logger.info(f'Sending token request to {token_request.url} for user {request.user}')
-            response = s.send(token_request)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error(exc)
-            messages.error(request, f'Error communicating with {client.driver.description}')
-        else:
-            token = models.Token.objects.extract(request.user, client, response)
-            logger.info(f'{client.driver.description} token {token} obtained for user {request.user}')
-            messages.success(request, f'Obtained token from {client.driver.description}')
-
+            workflows.fetch_tokens(request, client)
+        except IOError:
+            return http.HttpResponse(f'An error occurred while communicating with {client.description}', status=503)
+        messages.success(request, f'Authorization obtained from {client.description}')
+        return_url = workflows.get_return_url(request)
         return http.HttpResponseRedirect(return_url)
