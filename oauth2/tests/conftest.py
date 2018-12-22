@@ -1,4 +1,5 @@
 import collections.abc as collections
+import secrets
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
@@ -7,7 +8,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import RequestFactory
 from django.utils import timezone
 
-from oauth2 import drivers
+from oauth2 import drivers, models
 
 
 @pytest.fixture(scope='session', params=drivers.ClientDriver.get_drivers())
@@ -64,14 +65,32 @@ def response_factory():
             def __len__(self):
                 return len(self._store)
 
-        def __init__(self, data):
-            self.headers = self.Headers({'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S GMT')})
+        def __init__(self, data, date=None):
+            if date is None:
+                date = timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')
+            self.headers = self.Headers({'Date': date})
             self.data = data
 
         def json(self):
             return self.data
 
-    def factory(data):
-        return Response(data)
+    def factory(data, date=None):
+        return Response(data, date=date)
 
     return factory
+
+
+@pytest.fixture()
+def sample_user():
+    user, __ = User.objects.get_or_create(username='ralff', email='ralff@aie-guild.org')
+    return user
+
+
+@pytest.fixture(params=drivers.ClientDriver.get_driver_names())
+def sample_client(request):
+    return models.Client.objects.create(
+        service=request.param,
+        name='test_client',
+        client_id=secrets.token_hex(16),
+        client_secret=secrets.token_urlsafe(16)
+    )
