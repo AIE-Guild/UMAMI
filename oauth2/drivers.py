@@ -1,4 +1,8 @@
 import abc
+from collections import namedtuple
+from typing import Mapping
+
+APIResource = namedtuple('APIResource', 'id tag')
 
 
 class ClientDriver(metaclass=abc.ABCMeta):
@@ -61,6 +65,15 @@ class ClientDriver(metaclass=abc.ABCMeta):
     def scopes(self) -> tuple:
         """Default OAuth2 scopes."""
 
+    @property
+    @abc.abstractmethod
+    def resource_url(self) -> str:
+        """API resource info endpoint."""
+
+    @abc.abstractmethod
+    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
+        """Method to extract resource identifiers from an API resource response."""
+
 
 class DiscordDriver(ClientDriver):
     http_basic_auth = False
@@ -70,13 +83,22 @@ class DiscordDriver(ClientDriver):
     token_url = 'https://discordapp.com/api/oauth2/token'
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
     scopes = ('identify', 'email')
+    resource_url = 'https://discordapp.com/api/v6/users/@me'
+
+    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
+        return APIResource(id=data['id'], tag=f"{data['username']}:{data['discriminator']}")
 
 
 class BattleNetDriver(ClientDriver):
-    name = 'battle_net'
-    description = 'Battle.net'
+    http_basic_auth = False
+    name = 'battle_net_us'
+    description = 'Battle.net US'
     authorization_url = 'https://us.battle.net/oauth/authorize'
     token_url = 'https://us.battle.net/oauth/token'
     verification_url = 'https://us.battle.net/oauth/check_token'
     revocation_url = None
     scopes = ('wow.profile', 'sc2.profile')
+    resource_url = 'https://us.battle.net/oauth/userinfo'
+
+    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
+        return APIResource(id=data['id'], tag=data['battletag'])

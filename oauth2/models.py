@@ -1,9 +1,7 @@
 import datetime as dt
 import logging
-import secrets
 import uuid
-from typing import Optional, Tuple
-from urllib import parse
+from typing import Optional
 
 import requests
 from django import http
@@ -31,7 +29,7 @@ class Client(models.Model):
         return self.name
 
     @property
-    def scopes(self) -> tuple:
+    def scopes(self) -> Optional[tuple]:
         driver = drivers.ClientDriver.create(self.service)
         if driver is None:
             return
