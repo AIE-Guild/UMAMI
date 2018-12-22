@@ -8,7 +8,7 @@ import requests
 from django import http
 from django.conf import settings
 from django.db import models, transaction
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 from furl import furl
 

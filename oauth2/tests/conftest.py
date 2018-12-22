@@ -1,6 +1,9 @@
 import collections.abc as collections
 
 import pytest
+from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test.client import RequestFactory
 from django.utils import timezone
 
 from oauth2 import drivers
@@ -9,6 +12,28 @@ from oauth2 import drivers
 @pytest.fixture(scope='session', params=drivers.ClientDriver.get_drivers())
 def service(request):
     return request.param
+
+
+@pytest.fixture()
+def rf(rf):
+    class UserSessionRequestFactory(RequestFactory):
+        def generic(self, method, path, data='', content_type='application/octet-stream', secure=False, **extra):
+            username = extra.get('username')
+            headers = extra.get('headers')
+            request = super().generic(method, path, data, content_type, secure, **extra)
+            try:
+                request.user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                request.user = AnonymousUser()
+            if headers is not None:
+                for key in headers:
+                    request.META[key] = headers[key]
+            middleware = SessionMiddleware()
+            middleware.process_request(request)
+            request.session.save()
+            return request
+
+    return UserSessionRequestFactory()
 
 
 @pytest.fixture()

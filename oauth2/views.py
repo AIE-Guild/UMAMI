@@ -3,6 +3,7 @@ import logging
 import requests
 from django import http
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import base
 
 from oauth2 import exceptions, models
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class AuthorizationView(base.View):
+class AuthorizationView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
@@ -30,7 +31,7 @@ class AuthorizationView(base.View):
         return http.HttpResponseRedirect(url)
 
 
-class TokenView(base.View):
+class TokenView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
