@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from dataclasses import dataclass, field
-from oauth2 import utils
+from oauth2 import exceptions, utils
 from oauth2.models import Client
 
 logger = logging.getLogger(__name__)
@@ -63,5 +63,21 @@ def get_authorization_url(request: http.HttpRequest, client: Client, return_url:
     logger.debug('built authorization URL: %s', result)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
     request.session[settings.OAUTH2_SESSION_RETURN_KEY] = return_url
-    logger.debug('storing session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
+    logger.debug('stored session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
     return result
+
+
+def validate_authorization_response(request: http.HttpRequest, client: Client) -> None:
+    state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
+    logger.debug('fetched session state for user %s: state=%s', request.user, state)
+    if request.GET['state'] != state:
+        logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
+        raise ValueError('Authorization state mismatch.')
+    if 'error' in request.GET:
+        exc = exceptions.OAuth2Error(
+            error=request.GET['error'],
+            description=request.GET.get('error_description'),
+            uri=request.GET.get('error_uri')
+        )
+        logger.error(f'Authorization error: {exc}')
+        raise exc

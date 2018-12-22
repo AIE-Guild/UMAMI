@@ -36,34 +36,7 @@ def test_scope_override(client):
     assert client.scopes == ('foo', 'bar', 'baz')
 
 
-def test_authorization_response_state(client, rf):
-    data = {
-        'code': secrets.token_urlsafe(16),
-        'state': secrets.token_urlsafe(16)
-    }
-    request = rf.get('/auth/token', data=data)
-    client.validate_authorization_response(request, state=data['state'])
-    with pytest.raises(ValueError):
-        client.validate_authorization_response(request, state='deadbeef')
 
-
-def test_authorization_response_error(client, rf):
-    data = {
-        'error': 'temporarily_unavailable',
-        'error_description': 'server offline for maintenance',
-        'error_uri': 'https://tools.ietf.org/html/rfc6749#section-4.1.2',
-        'state': secrets.token_urlsafe(16)
-    }
-    request = rf.get('/auth/token', data=data)
-    with pytest.raises(ValueError):
-        client.validate_authorization_response(request, state='deadbeef')
-    with pytest.raises(exceptions.OAuth2Error) as exc:
-        client.validate_authorization_response(request, state=data['state'])
-    assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
-                              '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
-    assert exc.value.error == data['error']
-    assert exc.value.description == data['error_description']
-    assert exc.value.uri == data['error_uri']
 
 
 def test_token_request(client, service, rf):

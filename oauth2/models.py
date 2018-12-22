@@ -49,20 +49,6 @@ class Client(models.Model):
         except NoReverseMatch:
             return
 
-    def validate_authorization_response(self, request: http.HttpRequest, state: str) -> None:
-        if state != request.GET['state']:
-            msg = f"state mismatch: '{request.GET['state']}' received, '{state}' expected."
-            logger.error(msg)
-            raise ValueError(msg)
-        if 'error' in request.GET:
-            error = request.GET['error']
-            logger.error(f'Oauth2 authorization error: {error}')
-            raise exceptions.OAuth2Error(
-                error=error,
-                description=request.GET.get('error_description'),
-                uri=request.GET.get('error_uri')
-            )
-
     def get_token_request(self, request: http.HttpRequest) -> requests.PreparedRequest:
         data = {
             'grant_type': 'authorization_code',

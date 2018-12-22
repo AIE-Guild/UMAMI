@@ -3,7 +3,7 @@ import secrets
 
 import pytest
 
-from oauth2 import workflows
+from oauth2 import exceptions, workflows
 
 
 @pytest.fixture(scope='session')
@@ -58,3 +58,37 @@ def test_get_authorization_url(sample_client, rf, settings):
     assert f'client_id={sample_client.client_id}' in url
     assert f"state={request.session[settings.OAUTH2_SESSION_STATE_KEY]}" in url
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/foo'
+
+
+def test_authorization_response_state(rf, sample_client, settings):
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', data=data)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
+    workflows.validate_authorization_response(request, sample_client)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_hex(16)
+    with pytest.raises(ValueError):
+        workflows.validate_authorization_response(request, sample_client)
+
+
+def test_authorization_response_error(rf, sample_client, settings):
+    data = {
+        'error': 'temporarily_unavailable',
+        'error_description': 'server offline for maintenance',
+        'error_uri': 'https://tools.ietf.org/html/rfc6749#section-4.1.2',
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', data=data)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = None
+    with pytest.raises(ValueError):
+        workflows.validate_authorization_response(request, sample_client)
+    request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
+    with pytest.raises(exceptions.OAuth2Error) as exc:
+        workflows.validate_authorization_response(request, sample_client)
+    assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
+                              '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
+    assert exc.value.error == data['error']
+    assert exc.value.description == data['error_description']
+    assert exc.value.uri == data['error_uri']

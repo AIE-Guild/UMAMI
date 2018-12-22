@@ -37,7 +37,7 @@ class TokenView(LoginRequiredMixin, base.View):
         try:
             client = models.Client.objects.get(name=name)
         except models.Client.DoesNotExist:
-            logger.error(f'No client found: {name}')
+            logger.error('No client found: %s', name)
             return http.HttpResponseServerError()
 
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
@@ -45,7 +45,7 @@ class TokenView(LoginRequiredMixin, base.View):
         logger.debug(f'fetched from session: state={state}, return_url={return_url}')
 
         try:
-            client.validate_authorization_response(request, state=state)
+            workflows.validate_authorization_response(request, client)
         except ValueError as exc:
             logger.error(exc)
             return http.HttpResponseForbidden(exc)
