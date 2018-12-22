@@ -1,14 +1,12 @@
 import secrets
 
 import pytest
-from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.urls import reverse
 from django.utils.http import urlencode
 
-from oauth2 import drivers
-from oauth2 import models
-from oauth2 import views
+from oauth2 import drivers, models, views
 
 
 @pytest.fixture(params=drivers.ClientDriver.get_driver_names())

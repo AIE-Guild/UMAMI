@@ -1,11 +1,9 @@
-import secrets
 import base64
+import secrets
 
 import pytest
-import requests
 
-from oauth2 import models
-from oauth2 import exceptions
+from oauth2 import exceptions, models
 
 
 @pytest.fixture()

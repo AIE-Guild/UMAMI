@@ -1,12 +1,11 @@
 import logging
 
 import requests
+from django import http
 from django.conf import settings
 from django.views.generic import base
-from django import http
 
-from oauth2 import models
-from oauth2 import exceptions
+from oauth2 import exceptions, models
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
