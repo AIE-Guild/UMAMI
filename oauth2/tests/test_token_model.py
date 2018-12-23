@@ -5,7 +5,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from oauth2 import models, utils
+from oauth2 import models, utils, workflows
 
 
 @pytest.fixture()
@@ -44,13 +44,3 @@ def test_create(user, client):
         expiry=timezone.now() + dt.timedelta(seconds=3600)
     )
     assert isinstance(token, models.Token)
-
-
-def test_extract(user, client, token_data, response_factory):
-    response = response_factory(token_data)
-    ts = utils.parse_http_date(response.headers['Date'])
-    token = models.Token.objects.extract(user, client, response)
-    assert token.user == user
-    assert token.client == client
-    diff = token.expiry - ts
-    assert diff == dt.timedelta(seconds=int(token_data['expires_in']))

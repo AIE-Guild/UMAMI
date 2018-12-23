@@ -1,16 +1,14 @@
-import datetime as dt
 import logging
 import uuid
-from typing import Optional
+from typing import Optional, Dict
 
-import requests
-from django import http
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers, exceptions, utils
+from oauth2 import drivers
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -54,32 +52,6 @@ class Client(models.Model):
             return
 
 
-class TokenManager(models.Manager):
-    def extract(self, user, client, response: requests.Response) -> 'Token':
-        def expiry(date_header, expires_in=None):
-            current = utils.parse_http_date(date_header)
-            if expires_in is None:
-                return
-            target = current + dt.timedelta(seconds=int(expires_in))
-            logger.debug(f'calculating expiry: current={current}, target={target}')
-            return target
-
-        data = response.json()
-        attrs = {
-            'token_type': data['token_type'],
-            'access_token': data['access_token'],
-            'refresh_token': data.get('refresh_token', ''),
-            'expiry': expiry(response.headers['Date'], data.get('expires_in'))
-        }
-        with transaction.atomic():
-            token, created = self.get_or_create(user=user, client=client, defaults=attrs)
-            if created:
-                for key in attrs:
-                    setattr(token, key, attrs[key])
-                token.save()
-        return token
-
-
 class Token(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
@@ -88,8 +60,6 @@ class Token(models.Model):
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
-
-    objects = TokenManager()
 
     class Meta:
         unique_together = ('user', 'client')

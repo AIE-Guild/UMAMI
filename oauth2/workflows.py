@@ -24,7 +24,7 @@ class TokenData:
     client: Client
     access_token: str
     token_type: str = 'Bearer'
-    refresh_token: str = None
+    refresh_token: str = ''
     expires_in: int = None
     timestamp: dt.datetime = field(default_factory=timezone.now)
     resource_id: str = None
@@ -115,7 +115,10 @@ def fetch_tokens(request: http.HttpRequest, client: Client) -> Token:
     except requests.RequestException as exc:
         logger.error(exc)
         raise IOError(exc)
-    token = Token.objects.extract(request.user, client, response)
+    token_data = TokenData.from_response(request.user, client, response)
+    attrs = {k: getattr(token_data, k) for k in ['access_token', 'token_type', 'refresh_token', 'expiry'] if
+             getattr(token_data, k) is not None}
+    token, created = Token.objects.update_or_create(user=request.user, client=client, defaults=attrs)
     logger.info('%s token %s obtained for user %s', client.driver.description, token, request.user)
     return token
 
