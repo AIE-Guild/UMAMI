@@ -16,8 +16,8 @@ logger.addHandler(logging.NullHandler())
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.SlugField(verbose_name=_('name'), unique=True, max_length=50)
-    service = models.CharField(verbose_name=_('service'), max_length=50, choices=drivers.ClientDriver.get_choices())
+    name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
+    service = models.CharField(verbose_name=_('service'), max_length=64, choices=drivers.ClientDriver.get_choices())
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
@@ -56,13 +56,15 @@ class Token(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
     client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.CASCADE)
-    token_type = models.CharField(verbose_name=_('token type'), max_length=50, default='bearer')
+    resource_id = models.CharField(verbose_name=_('resource ID'), max_length=64, blank=True, default='')
+    resource_tag = models.CharField(verbose_name=_('resource tag'), max_length=64, blank=True, default='')
+    token_type = models.CharField(verbose_name=_('token type'), max_length=64, default='bearer')
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
 
     class Meta:
-        unique_together = ('user', 'client')
+        unique_together = ('user', 'client', 'resource_id')
 
     def __str__(self):
         return str(self.id)

@@ -27,8 +27,8 @@ class TokenData:
     refresh_token: str = ''
     expires_in: int = None
     timestamp: dt.datetime = field(default_factory=timezone.now)
-    resource_id: str = None
-    resource_tag: str = None
+    resource_id: str = ''
+    resource_tag: str = ''
 
     @property
     def expiry(self) -> Optional[dt.datetime]:

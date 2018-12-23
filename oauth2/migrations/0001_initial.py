@@ -1,8 +1,7 @@
-import uuid
-
-import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+import django.db.models.deletion
+import uuid
 
 
 class Migration(migrations.Migration):
@@ -17,9 +16,9 @@ class Migration(migrations.Migration):
             name='Client',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.SlugField(unique=True, verbose_name='name')),
+                ('name', models.SlugField(max_length=64, unique=True, verbose_name='name')),
                 ('service',
-                 models.CharField(choices=[('discord', 'Discord'), ('battle_net_us', 'Battle.net US')], max_length=50,
+                 models.CharField(choices=[('discord', 'Discord'), ('battle_net_us', 'Battle.net US')], max_length=64,
                                   verbose_name='service')),
                 ('enabled', models.BooleanField(default=True, verbose_name='enabled')),
                 ('client_id', models.CharField(max_length=191, verbose_name='client id')),
@@ -31,7 +30,9 @@ class Migration(migrations.Migration):
             name='Token',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('token_type', models.CharField(default='bearer', max_length=50, verbose_name='token type')),
+                ('resource_id', models.CharField(blank=True, default='', max_length=64, verbose_name='resource ID')),
+                ('resource_tag', models.CharField(blank=True, default='', max_length=64, verbose_name='resource tag')),
+                ('token_type', models.CharField(default='bearer', max_length=64, verbose_name='token type')),
                 ('access_token', models.TextField(verbose_name='access token')),
                 ('refresh_token', models.TextField(blank=True, default='', verbose_name='refresh token')),
                 ('expiry', models.DateTimeField(blank=True, null=True, verbose_name='expiry')),
@@ -43,6 +44,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='token',
-            unique_together={('user', 'client')},
+            unique_together={('user', 'client', 'resource_id')},
         ),
     ]
