@@ -35,8 +35,12 @@ class TokenData:
         if self.expires_in is None:
             return
         result = self.timestamp + dt.timedelta(seconds=self.expires_in)
-        logger.debug(f'calculated expiry=%s from timestamp=%s + expires_in=%s', result, self.timestamp, self.expires_in)
+        logger.debug('calculated expiry=%s from timestamp=%s + expires_in=%s', result, self.timestamp, self.expires_in)
         return result
+
+    @property
+    def authorization(self):
+        return f'{self.token_type.title()} {self.access_token}'
 
     @classmethod
     def from_response(cls, user: User, client: Client, response: requests.Response) -> 'TokenData':
@@ -116,9 +120,25 @@ def fetch_tokens(request: http.HttpRequest, client: Client) -> Token:
         logger.error(exc)
         raise IOError(exc)
     token_data = TokenData.from_response(request.user, client, response)
-    attrs = {k: getattr(token_data, k) for k in ['access_token', 'token_type', 'refresh_token', 'expiry'] if
+
+    try:
+        logger.debug('sending resource request to %s', client.driver.resource_url)
+        response = session.get(client.driver.resource_url, headers={'Authorization': token_data.authorization})
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error(exc)
+        raise IOError(exc)
+    token_data.resource_id, token_data.resource_tag = client.driver.get_resource_ids(response.json())
+
+    attrs = {k: getattr(token_data, k) for k in
+             ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag'] if
              getattr(token_data, k) is not None}
-    token, created = Token.objects.update_or_create(user=request.user, client=client, defaults=attrs)
+    token, created = Token.objects.update_or_create(
+        user=request.user,
+        client=client,
+        resource_id=token_data.resource_id,
+        defaults=attrs
+    )
     logger.info('%s token %s obtained for user %s', client.driver.description, token, request.user)
     return token
 

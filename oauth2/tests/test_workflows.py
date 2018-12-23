@@ -18,6 +18,16 @@ def token_response():
     }
 
 
+@pytest.fixture(scope='session')
+def resource_response():
+    return {
+        'id': secrets.token_hex(16),
+        'battletag': 'User#1234',
+        'username': 'User',
+        'discriminator': '1234'
+    }
+
+
 def test_token_data_from_response(response_factory, token_response, tf_user, tf_client, tf_datestr,
                                   tf_date):
     response = response_factory(token_response, date=tf_datestr)
@@ -95,8 +105,9 @@ def test_authorization_response_error(rf, tf_client, settings):
     assert exc.value.uri == data['error_uri']
 
 
-def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
+def test_fetch_tokens(rf, tf_client, requests_mock, token_response, resource_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
+    requests_mock.get(tf_client.driver.resource_url, json=resource_response)
     data = {
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
@@ -107,8 +118,21 @@ def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_datestr, 
     assert token.access_token == token_response['access_token']
 
 
-def test_fetch_tokens_failure(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
+def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, exc=requests.ConnectionError())
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    request = rf.get('/auth/token', username=tf_user, data=data)
+    with pytest.raises(IOError):
+        workflows.fetch_tokens(request, tf_client)
+
+
+def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_response, resource_response, tf_datestr,
+                                       tf_user):
+    requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
+    requests_mock.get(tf_client.driver.resource_url, exc=requests.ConnectionError())
     data = {
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)

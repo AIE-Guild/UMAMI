@@ -58,10 +58,17 @@ def test_token(rf, settings, user, client_obj, requests_mock):
         'token_type': 'bearer',
         'expires_in': 3600,
     }
+    resource = {
+        'id': secrets.token_hex(16),
+        'battletag': 'User#1234',
+        'username': 'User',
+        'discriminator': '1234'
+    }
     requests_mock.post(
         client_obj.driver.token_url,
         json=expected,
         headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')})
+    requests_mock.get(client_obj.driver.resource_url, json=resource)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
@@ -73,9 +80,11 @@ def test_token(rf, settings, user, client_obj, requests_mock):
     response = views.TokenView.as_view()(request, client_name=client_obj.name)
     assert response.status_code == 302
     assert requests_mock.called
-    assert requests_mock.call_count == 1
-    assert requests_mock.last_request.method == 'POST'
-    assert requests_mock.last_request.url == client_obj.driver.token_url
+    assert requests_mock.call_count == 2
+    assert requests_mock.request_history[0].method == 'POST'
+    assert requests_mock.request_history[0].url == client_obj.driver.token_url
+    assert requests_mock.request_history[1].method == 'GET'
+    assert requests_mock.request_history[1].url == client_obj.driver.resource_url
 
 
 def test_token_error(rf, settings, user, client_obj):

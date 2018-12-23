@@ -86,7 +86,7 @@ class DiscordDriver(ClientDriver):
     resource_url = 'https://discordapp.com/api/v6/users/@me'
 
     def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(id=data['id'], tag=f"{data['username']}:{data['discriminator']}")
+        return APIResource(id=data['id'], tag=f"{data['username']}#{data['discriminator']}")
 
 
 class BattleNetDriver(ClientDriver):
