@@ -2,25 +2,9 @@ import datetime as dt
 import secrets
 
 import pytest
-from django.contrib.auth.models import User
 from django.utils import timezone
 
-from oauth2 import models, utils, workflows
-
-
-@pytest.fixture()
-def user():
-    return User.objects.create(username='ralff', email='ralff@aie-guild.org')
-
-
-@pytest.fixture()
-def client(service):
-    return models.Client.objects.create(
-        service=service.name,
-        name='test_client',
-        client_id=secrets.token_hex(16),
-        client_secret=secrets.token_urlsafe(16)
-    )
+from oauth2 import models
 
 
 @pytest.fixture()
@@ -34,10 +18,30 @@ def token_data():
     }
 
 
-def test_create(user, client):
+def test_name(tf_client):
+    assert tf_client.name == 'test_client'
+
+
+def test_driver(tf_client):
+    driver = tf_client.driver
+    assert tf_client.service == driver.name
+
+
+def test_scopes(tf_client):
+    driver = tf_client.driver
+    assert tf_client.scopes == driver.scopes
+
+
+def test_scope_override(tf_client):
+    tf_client.scope_override = 'foo bar   baz '
+    tf_client.save()
+    assert tf_client.scopes == ('foo', 'bar', 'baz')
+
+
+def test_create(tf_user, tf_client):
     token = models.Token.objects.create(
-        user=user,
-        client=client,
+        user=tf_user,
+        client=tf_client,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),

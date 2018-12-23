@@ -83,24 +83,24 @@ def response_factory():
 
 
 @pytest.fixture(scope='session')
-def sample_datestr():
+def tf_datestr():
     return 'Sun, 12 Jan 1997 12:00:00 UTC'
 
 
 @pytest.fixture(scope='session')
-def sample_date():
+def tf_date():
     date = dt.datetime(1997, 1, 12, 12, 00, 00, 0)
     return pytz.timezone(timezone.get_default_timezone_name()).localize(date)
 
 
 @pytest.fixture()
-def sample_user():
+def tf_user():
     user, __ = User.objects.get_or_create(username='ralff', email='ralff@aie-guild.org')
     return user
 
 
 @pytest.fixture(params=drivers.ClientDriver.get_driver_names())
-def sample_client(request):
+def tf_client(request):
     return models.Client.objects.create(
         service=request.param,
         name='test_client',
