@@ -4,7 +4,7 @@ import secrets
 import pytest
 import requests
 
-from oauth2 import exceptions, workflows, models
+from oauth2 import exceptions, models, workflows
 
 
 @pytest.fixture(scope='session')

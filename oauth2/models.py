@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth.models import User

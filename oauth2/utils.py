@@ -1,20 +1,20 @@
 import datetime as dt
 import email.utils as eut
 from typing import Optional
+from urllib import parse
 
 import pytz
 from django.http import HttpRequest
 from django.utils import timezone
-from furl import furl
 
 
 def exposed_url(request: HttpRequest, path: Optional[str] = '/') -> str:
-    target = furl(request.build_absolute_uri(path))
+    target = parse.urlsplit(request.build_absolute_uri(path))
     try:
-        target.scheme = request.META['HTTP_X_FORWARDED_PROTO']
+        target = target._replace(scheme=request.META['HTTP_X_FORWARDED_PROTO'])
     except KeyError:
         pass
-    return target.url
+    return parse.urlunsplit(target)
 
 
 def parse_http_date(text):
