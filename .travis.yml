@@ -22,7 +22,7 @@ install:
   - python manage.py collectstatic --noinput
 
 script:
-  - pytest
+  - pytest --cov
 
 after_success: coveralls
 
