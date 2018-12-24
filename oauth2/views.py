@@ -40,7 +40,7 @@ class TokenView(LoginRequiredMixin, base.View):
 
         try:
             flow.validate_state(request)
-            flow.validate_response(request)
+            flow.validate_authorization_response(request)
         except ValueError as exc:
             logger.error(exc)
             return http.HttpResponseForbidden(exc)

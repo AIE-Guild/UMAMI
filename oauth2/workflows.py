@@ -94,23 +94,6 @@ class AuthorizationCodeWorkflow:
         logger.debug('stored session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
         return result
 
-    def validate_response(self, request: http.HttpRequest) -> None:
-        if 'error' in request.GET:
-            exc = exceptions.OAuth2Error(
-                error=request.GET['error'],
-                description=request.GET.get('error_description'),
-                uri=request.GET.get('error_uri')
-            )
-            logger.error(f'Authorization error: {exc}')
-            raise exc
-
-    def validate_state(self, request: http.HttpRequest) -> None:
-        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
-        logger.debug('fetched session state for user %s: state=%s', request.user, state)
-        if request.GET['state'] != state:
-            logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
-            raise ValueError('Authorization state mismatch.')
-
     def fetch_token(self, request: http.HttpRequest) -> Token:
         data = {
             'grant_type': 'authorization_code',
@@ -128,6 +111,7 @@ class AuthorizationCodeWorkflow:
             logger.debug('sending token request to %s', self.client.driver.token_url)
             response = self.session.post(self.client.driver.token_url, data=data, auth=auth)
             response.raise_for_status()
+            self.validate_token_response(response)
         except requests.RequestException as exc:
             logger.error(exc)
             raise IOError(exc)
@@ -154,6 +138,34 @@ class AuthorizationCodeWorkflow:
         )
         logger.info('%s token %s obtained for user %s', self.client.driver.description, token, request.user)
         return token
+
+    def validate_state(self, request: http.HttpRequest) -> None:
+        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
+        logger.debug('fetched session state for user %s: state=%s', request.user, state)
+        if request.GET['state'] != state:
+            logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
+            raise ValueError('Authorization state mismatch.')
+
+    def validate_authorization_response(self, request: http.HttpRequest) -> None:
+        if 'error' in request.GET:
+            exc = exceptions.OAuth2Error(
+                error=request.GET['error'],
+                description=request.GET.get('error_description'),
+                uri=request.GET.get('error_uri')
+            )
+            logger.error(f'Authorization request error: {exc}')
+            raise exc
+
+    def validate_token_response(self, response: requests.Response) -> None:
+        data = response.json()
+        if 'error' in data:
+            exc = exceptions.OAuth2Error(
+                error=data['error'],
+                description=data.get('error_description'),
+                uri=data.get('error_uri')
+            )
+            logger.error(f'Token request error: {exc}')
+            raise exc
 
     def get_return_url(self, request: http.HttpRequest) -> str:
         return request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)

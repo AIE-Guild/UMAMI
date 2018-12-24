@@ -100,7 +100,7 @@ def test_authorization_response_error(rf, tf_client, settings):
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
     with pytest.raises(exceptions.OAuth2Error) as exc:
-        flow.validate_response(request)
+        flow.validate_authorization_response(request)
     assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
                               '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
     assert exc.value.error == data['error']
@@ -108,7 +108,7 @@ def test_authorization_response_error(rf, tf_client, settings):
     assert exc.value.uri == data['error_uri']
 
 
-def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_resource_response, tf_datestr, tf_user):
+def test_fetch_token(rf, tf_client, requests_mock, token_response, tf_resource_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
     requests_mock.get(tf_client.driver.resource_url, json=tf_resource_response)
     data = {
@@ -122,7 +122,30 @@ def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_resource_
     assert token.access_token == token_response['access_token']
 
 
-def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
+def test_fetch_token_auth_error(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
+    error = {
+        'error': 'temporarily_unavailable',
+        'error_description': 'server offline for maintenance',
+        'error_uri': 'https://tools.ietf.org/html/rfc6749#section-4.1.2',
+        'state': secrets.token_urlsafe(16)
+    }
+    requests_mock.post(tf_client.driver.token_url, json=error)
+    data = {
+        'code': secrets.token_urlsafe(16),
+        'state': secrets.token_urlsafe(16)
+    }
+    flow = AuthorizationCodeWorkflow(tf_client.name)
+    request = rf.get('/auth/token', username=tf_user, data=data)
+    with pytest.raises(exceptions.OAuth2Error) as exc:
+        flow.fetch_token(request)
+    assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
+                              '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
+    assert exc.value.error == error['error']
+    assert exc.value.description == error['error_description']
+    assert exc.value.uri == error['error_uri']
+
+
+def test_fetch_token_auth_failure(rf, tf_client, requests_mock, token_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, exc=requests.ConnectionError())
     data = {
         'code': secrets.token_urlsafe(16),
@@ -134,8 +157,8 @@ def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response
         flow.fetch_token(request)
 
 
-def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_response, tf_datestr,
-                                       tf_user):
+def test_fetch_token_resource_failure(rf, tf_client, requests_mock, token_response, tf_datestr,
+                                      tf_user):
     requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
     requests_mock.get(tf_client.driver.resource_url, exc=requests.ConnectionError())
     data = {
