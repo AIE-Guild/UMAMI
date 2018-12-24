@@ -68,3 +68,7 @@ class Token(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+    @property
+    def authorization(self):
+        return f'{self.token_type.title()} {self.access_token}'
