@@ -5,7 +5,7 @@ import pytest
 import requests
 
 from oauth2 import exceptions, models, workflows
-from oauth2.workflows import CodeGrantWorkflow
+from oauth2.workflows import AuthorizationCodeWorkflow
 
 
 @pytest.fixture(scope='session')
@@ -57,7 +57,7 @@ def test_token_data_non_expiring(response_factory, token_response, tf_user, tf_c
 
 
 def test_get_authorization_url(tf_client, rf, settings):
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     driver = tf_client.driver
     request = rf.get('/')
     url = flow.get_authorization_url(request)
@@ -80,7 +80,7 @@ def test_authorization_response_state(rf, tf_client, settings):
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
     flow.validate_authorization_response(request)
@@ -96,7 +96,7 @@ def test_authorization_response_error(rf, tf_client, settings):
         'error_uri': 'https://tools.ietf.org/html/rfc6749#section-4.1.2',
         'state': secrets.token_urlsafe(16)
     }
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = None
     with pytest.raises(ValueError):
@@ -118,7 +118,7 @@ def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_resource_
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
     token = flow.fetch_token(request)
     assert isinstance(token, models.Token)
@@ -131,7 +131,7 @@ def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
     with pytest.raises(IOError):
         flow.fetch_token(request)
@@ -145,7 +145,7 @@ def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_respo
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
     }
-    flow = CodeGrantWorkflow(tf_client.name)
+    flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
     with pytest.raises(IOError):
         flow.fetch_token(request)

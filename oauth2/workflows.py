@@ -50,7 +50,7 @@ class TokenData:
         return cls(user, client, timestamp=ts, **args)
 
 
-class CodeGrantWorkflow:
+class AuthorizationCodeWorkflow:
     session = requests.Session()
 
     def __init__(self, client_name: str) -> None:

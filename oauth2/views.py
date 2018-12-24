@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import base
 
 from oauth2 import exceptions, models, workflows
-from oauth2.workflows import CodeGrantWorkflow
+from oauth2.workflows import AuthorizationCodeWorkflow
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -19,7 +19,7 @@ class AuthorizationView(LoginRequiredMixin, base.View):
     def get(self, request, *args, **kwargs):
         client_name = kwargs.get('client_name')
         try:
-            flow = CodeGrantWorkflow(client_name)
+            flow = AuthorizationCodeWorkflow(client_name)
         except ValueError as exc:
             return http.HttpResponseServerError(exc)
         return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME)
@@ -34,7 +34,7 @@ class TokenView(LoginRequiredMixin, base.View):
     def get(self, request, *args, **kwargs):
         client_name = kwargs.get('client_name')
         try:
-            flow = CodeGrantWorkflow(client_name)
+            flow = AuthorizationCodeWorkflow(client_name)
         except ValueError as exc:
             return http.HttpResponseServerError(exc)
 
