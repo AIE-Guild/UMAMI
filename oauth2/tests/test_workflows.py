@@ -5,6 +5,7 @@ import pytest
 import requests
 
 from oauth2 import exceptions, models, workflows
+from oauth2.workflows import CodeGrantWorkflow
 
 
 @pytest.fixture(scope='session')
@@ -56,14 +57,14 @@ def test_token_data_non_expiring(response_factory, token_response, tf_user, tf_c
 def test_get_authorization_url(tf_client, rf, settings):
     driver = tf_client.driver
     request = rf.get('/')
-    url = workflows.get_authorization_url(request, tf_client)
+    url = CodeGrantWorkflow.get_authorization_url(request, tf_client)
     assert url.startswith(driver.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
     assert f"state={request.session[settings.OAUTH2_SESSION_STATE_KEY]}" in url
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == settings.OAUTH2_RETURN_URL
 
-    url = workflows.get_authorization_url(request, tf_client, return_url='/foo')
+    url = CodeGrantWorkflow.get_authorization_url(request, tf_client, return_url='/foo')
     assert url.startswith(driver.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
@@ -78,10 +79,10 @@ def test_authorization_response_state(rf, tf_client, settings):
     }
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
-    workflows.validate_authorization_response(request, tf_client)
+    CodeGrantWorkflow.validate_authorization_response(request, tf_client)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_hex(16)
     with pytest.raises(ValueError):
-        workflows.validate_authorization_response(request, tf_client)
+        CodeGrantWorkflow.validate_authorization_response(request, tf_client)
 
 
 def test_authorization_response_error(rf, tf_client, settings):
@@ -94,10 +95,10 @@ def test_authorization_response_error(rf, tf_client, settings):
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = None
     with pytest.raises(ValueError):
-        workflows.validate_authorization_response(request, tf_client)
+        CodeGrantWorkflow.validate_authorization_response(request, tf_client)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
     with pytest.raises(exceptions.OAuth2Error) as exc:
-        workflows.validate_authorization_response(request, tf_client)
+        CodeGrantWorkflow.validate_authorization_response(request, tf_client)
     assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
                               '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
     assert exc.value.error == data['error']
@@ -113,7 +114,7 @@ def test_fetch_tokens(rf, tf_client, requests_mock, token_response, resource_res
         'state': secrets.token_urlsafe(16)
     }
     request = rf.get('/auth/token', username=tf_user, data=data)
-    token = workflows.fetch_tokens(request, tf_client)
+    token = CodeGrantWorkflow.fetch_token(request, tf_client)
     assert isinstance(token, models.Token)
     assert token.access_token == token_response['access_token']
 
@@ -126,7 +127,7 @@ def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response
     }
     request = rf.get('/auth/token', username=tf_user, data=data)
     with pytest.raises(IOError):
-        workflows.fetch_tokens(request, tf_client)
+        CodeGrantWorkflow.fetch_token(request, tf_client)
 
 
 def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_response, resource_response, tf_datestr,
@@ -139,4 +140,4 @@ def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_respo
     }
     request = rf.get('/auth/token', username=tf_user, data=data)
     with pytest.raises(IOError):
-        workflows.fetch_tokens(request, tf_client)
+        CodeGrantWorkflow.fetch_token(request, tf_client)

@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import base
 
 from oauth2 import exceptions, models, workflows
+from oauth2.workflows import CodeGrantWorkflow
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -23,7 +24,7 @@ class AuthorizationView(LoginRequiredMixin, base.View):
             logger.error('No client found: %s', name)
             return http.HttpResponseServerError()
         return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME)
-        url = workflows.get_authorization_url(request, client, return_url)
+        url = CodeGrantWorkflow.get_authorization_url(request, client, return_url)
         logger.info('Redirecting to: %s', url)
         return http.HttpResponseRedirect(url)
 
@@ -40,7 +41,7 @@ class TokenView(LoginRequiredMixin, base.View):
             return http.HttpResponseServerError()
 
         try:
-            workflows.validate_authorization_response(request, client)
+            CodeGrantWorkflow.validate_authorization_response(request, client)
         except ValueError as exc:
             logger.error(exc)
             return http.HttpResponseForbidden(exc)
@@ -49,9 +50,9 @@ class TokenView(LoginRequiredMixin, base.View):
             return http.HttpResponseForbidden(exc)
 
         try:
-            workflows.fetch_tokens(request, client)
+            CodeGrantWorkflow.fetch_token(request, client)
         except IOError:
             return http.HttpResponse(f'An error occurred while communicating with {client.description}', status=503)
         messages.success(request, f'Authorization obtained from {client.description}')
-        return_url = workflows.get_return_url(request)
+        return_url = CodeGrantWorkflow.get_return_url(request)
         return http.HttpResponseRedirect(return_url)
