@@ -107,3 +107,15 @@ def tf_client(request):
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16)
     )
+
+
+@pytest.fixture()
+def tf_resource_response():
+    return {
+        'id': secrets.token_hex(16),
+        'battletag': 'User#1234',
+        'username': 'User',
+        'discriminator': '1234',
+        'CharacterID': 95465499,
+        'CharacterName': 'CCP Bartender'
+    }

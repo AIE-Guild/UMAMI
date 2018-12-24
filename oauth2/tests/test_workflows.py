@@ -20,12 +20,14 @@ def token_response():
 
 
 @pytest.fixture(scope='session')
-def resource_response():
+def tf_resource_response():
     return {
         'id': secrets.token_hex(16),
         'battletag': 'User#1234',
         'username': 'User',
-        'discriminator': '1234'
+        'discriminator': '1234',
+        'CharacterID': 95465499,
+        'CharacterName': 'CCP Bartender'
     }
 
 
@@ -106,9 +108,9 @@ def test_authorization_response_error(rf, tf_client, settings):
     assert exc.value.uri == data['error_uri']
 
 
-def test_fetch_tokens(rf, tf_client, requests_mock, token_response, resource_response, tf_datestr, tf_user):
+def test_fetch_tokens(rf, tf_client, requests_mock, token_response, tf_resource_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
-    requests_mock.get(tf_client.driver.resource_url, json=resource_response)
+    requests_mock.get(tf_client.driver.resource_url, json=tf_resource_response)
     data = {
         'code': secrets.token_urlsafe(16),
         'state': secrets.token_urlsafe(16)
@@ -130,7 +132,7 @@ def test_fetch_tokens_token_failure(rf, tf_client, requests_mock, token_response
         CodeGrantWorkflow.fetch_token(request, tf_client)
 
 
-def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_response, resource_response, tf_datestr,
+def test_fetch_tokens_resource_failure(rf, tf_client, requests_mock, token_response, tf_datestr,
                                        tf_user):
     requests_mock.post(tf_client.driver.token_url, json=token_response, headers={'Date': tf_datestr})
     requests_mock.get(tf_client.driver.resource_url, exc=requests.ConnectionError())

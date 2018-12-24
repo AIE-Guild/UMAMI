@@ -76,11 +76,15 @@ class ClientDriver(metaclass=abc.ABCMeta):
 
 
 class DiscordDriver(ClientDriver):
+    """
+    Discord API - https://discordapp.com/developers/docs/intro
+    """
     http_basic_auth = False
     name = 'discord'
     description = 'Discord'
     authorization_url = 'https://discordapp.com/api/oauth2/authorize'
     token_url = 'https://discordapp.com/api/oauth2/token'
+    verification_url = None
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
     scopes = ('identify', 'email')
     resource_url = 'https://discordapp.com/api/v6/users/@me'
@@ -90,6 +94,9 @@ class DiscordDriver(ClientDriver):
 
 
 class BattleNetDriver(ClientDriver):
+    """
+    Battle.net API - https://develop.battle.net/documentation
+    """
     http_basic_auth = False
     name = 'battle_net_us'
     description = 'Battle.net US'
@@ -102,3 +109,21 @@ class BattleNetDriver(ClientDriver):
 
     def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
         return APIResource(id=data['id'], tag=data['battletag'])
+
+
+class EVEOnlineDriver(ClientDriver):
+    """
+    EVE Online ESI - https://docs.esi.evetech.net/
+    """
+    http_basic_auth = False
+    name = 'eve_online'
+    description = 'EVE Online'
+    authorization_url = 'https://login.eveonline.com/oauth/authorize'
+    token_url = 'https://login.eveonline.com/oauth/token'
+    verification_url = 'https://us.battle.net/oauth/check_token'
+    revocation_url = 'https://login.eveonline.com/oauth/revoke'
+    scopes = ('wow.profile', 'sc2.profile')
+    resource_url = 'https://esi.evetech.net/verify/'
+
+    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
+        return APIResource(id=str(data['CharacterID']), tag=data['CharacterName'])

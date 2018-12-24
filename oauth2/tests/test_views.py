@@ -51,24 +51,18 @@ def test_authorization_return_url(rf, user, client_obj, settings):
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
 
 
-def test_token(rf, settings, user, client_obj, requests_mock):
+def test_token(rf, settings, user, client_obj, tf_resource_response, requests_mock):
     expected = {
         'access_token': secrets.token_urlsafe(64),
         'refresh_token': secrets.token_urlsafe(64),
         'token_type': 'bearer',
         'expires_in': 3600,
     }
-    resource = {
-        'id': secrets.token_hex(16),
-        'battletag': 'User#1234',
-        'username': 'User',
-        'discriminator': '1234'
-    }
     requests_mock.post(
         client_obj.driver.token_url,
         json=expected,
         headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')})
-    requests_mock.get(client_obj.driver.resource_url, json=resource)
+    requests_mock.get(client_obj.driver.resource_url, json=tf_resource_response)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
