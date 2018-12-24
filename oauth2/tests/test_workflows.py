@@ -83,10 +83,10 @@ def test_authorization_response_state(rf, tf_client, settings):
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
-    flow.validate_authorization_response(request)
+    flow.validate_state(request)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_hex(16)
     with pytest.raises(ValueError):
-        flow.validate_authorization_response(request)
+        flow.validate_state(request)
 
 
 def test_authorization_response_error(rf, tf_client, settings):
@@ -98,12 +98,9 @@ def test_authorization_response_error(rf, tf_client, settings):
     }
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = None
-    with pytest.raises(ValueError):
-        flow.validate_authorization_response(request)
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
     with pytest.raises(exceptions.OAuth2Error) as exc:
-        flow.validate_authorization_response(request)
+        flow.validate_response(request)
     assert str(exc.value) == ('temporarily_unavailable: server offline for maintenance '
                               '(https://tools.ietf.org/html/rfc6749#section-4.1.2)')
     assert exc.value.error == data['error']

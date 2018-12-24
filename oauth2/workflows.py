@@ -94,12 +94,7 @@ class AuthorizationCodeWorkflow:
         logger.debug('stored session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
         return result
 
-    def validate_authorization_response(self, request: http.HttpRequest) -> None:
-        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
-        logger.debug('fetched session state for user %s: state=%s', request.user, state)
-        if request.GET['state'] != state:
-            logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
-            raise ValueError('Authorization state mismatch.')
+    def validate_response(self, request: http.HttpRequest) -> None:
         if 'error' in request.GET:
             exc = exceptions.OAuth2Error(
                 error=request.GET['error'],
@@ -108,6 +103,13 @@ class AuthorizationCodeWorkflow:
             )
             logger.error(f'Authorization error: {exc}')
             raise exc
+
+    def validate_state(self, request: http.HttpRequest) -> None:
+        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
+        logger.debug('fetched session state for user %s: state=%s', request.user, state)
+        if request.GET['state'] != state:
+            logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
+            raise ValueError('Authorization state mismatch.')
 
     def fetch_token(self, request: http.HttpRequest) -> Token:
         data = {
