@@ -17,14 +17,13 @@ class AuthorizationView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
-        name = kwargs.get('client_name')
+        client_name = kwargs.get('client_name')
         try:
-            client = models.Client.objects.get(name=name)
-        except models.Client.DoesNotExist:
-            logger.error('No client found: %s', name)
-            return http.HttpResponseServerError()
+            flow = CodeGrantWorkflow(client_name)
+        except ValueError as exc:
+            return http.HttpResponseServerError(exc)
         return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME)
-        url = CodeGrantWorkflow.get_authorization_url(request, client, return_url)
+        url = flow.get_authorization_url(request, return_url)
         logger.info('Redirecting to: %s', url)
         return http.HttpResponseRedirect(url)
 
@@ -33,15 +32,14 @@ class TokenView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
-        name = kwargs.get('client_name')
+        client_name = kwargs.get('client_name')
         try:
-            client = models.Client.objects.get(name=name)
-        except models.Client.DoesNotExist:
-            logger.error('No client found: %s', name)
-            return http.HttpResponseServerError()
+            flow = CodeGrantWorkflow(client_name)
+        except ValueError as exc:
+            return http.HttpResponseServerError(exc)
 
         try:
-            CodeGrantWorkflow.validate_authorization_response(request, client)
+            flow.validate_authorization_response(request)
         except ValueError as exc:
             logger.error(exc)
             return http.HttpResponseForbidden(exc)
@@ -50,9 +48,9 @@ class TokenView(LoginRequiredMixin, base.View):
             return http.HttpResponseForbidden(exc)
 
         try:
-            CodeGrantWorkflow.fetch_token(request, client)
-        except IOError:
-            return http.HttpResponse(f'An error occurred while communicating with {client.description}', status=503)
-        messages.success(request, f'Authorization obtained from {client.description}')
-        return_url = CodeGrantWorkflow.get_return_url(request)
+            flow.fetch_token(request)
+        except IOError as exc:
+            return http.HttpResponse(exc, status=503)
+        messages.success(request, f'Authorization obtained from {flow.verbose_name}')
+        return_url = flow.get_return_url(request)
         return http.HttpResponseRedirect(return_url)

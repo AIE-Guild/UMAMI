@@ -53,28 +53,37 @@ class TokenData:
 class CodeGrantWorkflow:
     session = requests.Session()
 
-    @classmethod
-    def get_authorization_url(cls, request: http.HttpRequest, client: Client, return_url: Optional[str] = None) -> str:
+    def __init__(self, client_name: str) -> None:
+        try:
+            self.client = Client.objects.get(name=client_name)
+        except Client.DoesNotExist:
+            logger.error('No client found: %s', client_name)
+            raise ValueError(f'No client found: {client_name}')
+
+    @property
+    def verbose_name(self):
+        return self.client.description
+
+    def get_authorization_url(self, request: http.HttpRequest, return_url: Optional[str] = None) -> str:
         """Build the OAuth2 authorization redirect URL.
 
         Args:
             request: The received user request.
-            client: An OAuth2 client.
             return_url: The URL to redirect to when the OAuth2 authorization code workflow is complete.
 
         Returns:
             The fully parametrized URL to redirect the user to for authorization.
 
         """
-        target = parse.urlsplit(client.driver.authorization_url)
+        target = parse.urlsplit(self.client.driver.authorization_url)
         state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
         if return_url is None:
             return_url = settings.OAUTH2_RETURN_URL
         args = {
             'response_type': 'code',
-            'client_id': client.client_id,
-            'redirect_uri': utils.exposed_url(request, path=client.callback),
-            'scope': ' '.join(client.scopes),
+            'client_id': self.client.client_id,
+            'redirect_uri': utils.exposed_url(request, path=self.client.callback),
+            'scope': ' '.join(self.client.scopes),
             'state': state
         }
         target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
@@ -85,8 +94,7 @@ class CodeGrantWorkflow:
         logger.debug('stored session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
         return result
 
-    @classmethod
-    def validate_authorization_response(cls, request: http.HttpRequest, client: Client) -> None:
+    def validate_authorization_response(self, request: http.HttpRequest) -> None:
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
         logger.debug('fetched session state for user %s: state=%s', request.user, state)
         if request.GET['state'] != state:
@@ -101,50 +109,49 @@ class CodeGrantWorkflow:
             logger.error(f'Authorization error: {exc}')
             raise exc
 
-    @classmethod
-    def fetch_token(cls, request: http.HttpRequest, client: Client) -> Token:
+    def fetch_token(self, request: http.HttpRequest) -> Token:
         data = {
             'grant_type': 'authorization_code',
             'code': request.GET['code'],
-            'redirect_uri': utils.exposed_url(request, path=client.callback),
-            'client_id': client.client_id
+            'redirect_uri': utils.exposed_url(request, path=self.client.callback),
+            'client_id': self.client.client_id
         }
-        if client.driver.http_basic_auth:
-            auth = (client.client_id, client.client_secret)
+        if self.client.driver.http_basic_auth:
+            auth = (self.client.client_id, self.client.client_secret)
         else:  # pragma: no cover
             auth = None
-            data['client_secret'] = client.client_secret
+            data['client_secret'] = self.client.client_secret
 
         try:
-            logger.debug('sending token request to %s', client.driver.token_url)
-            response = cls.session.post(client.driver.token_url, data=data, auth=auth)
+            logger.debug('sending token request to %s', self.client.driver.token_url)
+            response = self.session.post(self.client.driver.token_url, data=data, auth=auth)
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error(exc)
             raise IOError(exc)
-        token_data = TokenData.from_response(request.user, client, response)
+        token_data = TokenData.from_response(request.user, self.client, response)
 
         try:
-            logger.debug('sending resource request to %s', client.driver.resource_url)
-            response = cls.session.get(client.driver.resource_url, headers={'Authorization': token_data.authorization})
+            logger.debug('sending resource request to %s', self.client.driver.resource_url)
+            response = self.session.get(self.client.driver.resource_url,
+                                        headers={'Authorization': token_data.authorization})
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error(exc)
-            raise IOError(exc)
-        token_data.resource_id, token_data.resource_tag = client.driver.get_resource_ids(response.json())
+            raise IOError(f'An error occurred while communicating with {self.client.description}')
+        token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
         attrs = {k: getattr(token_data, k) for k in
                  ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag'] if
                  getattr(token_data, k) is not None}
         token, created = Token.objects.update_or_create(
             user=request.user,
-            client=client,
+            client=self.client,
             resource_id=token_data.resource_id,
             defaults=attrs
         )
-        logger.info('%s token %s obtained for user %s', client.driver.description, token, request.user)
+        logger.info('%s token %s obtained for user %s', self.client.driver.description, token, request.user)
         return token
 
-    @classmethod
-    def get_return_url(cls, request: http.HttpRequest) -> str:
+    def get_return_url(self, request: http.HttpRequest) -> str:
         return request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)
