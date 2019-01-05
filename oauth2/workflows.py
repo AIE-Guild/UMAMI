@@ -35,7 +35,7 @@ class TokenData:
         if self.expires_in is None:
             return
         result = self.timestamp + dt.timedelta(seconds=self.expires_in)
-        logger.debug('calculated expiry=%s from timestamp=%s + expires_in=%s', result, self.timestamp, self.expires_in)
+        logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
         return result
 
     @property
@@ -57,8 +57,8 @@ class AuthorizationCodeWorkflow:
         try:
             self.client = Client.objects.get(name=client_name)
         except Client.DoesNotExist:
-            logger.error('No client found: %s', client_name)
-            raise ValueError(f'No client found: {client_name}')
+            logger.error("No client found: %s", client_name)
+            raise ValueError(f"No client found: {client_name}")
 
     @property
     def verbose_name(self):
@@ -88,10 +88,10 @@ class AuthorizationCodeWorkflow:
         }
         target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
         result = parse.urlunsplit(target)
-        logger.debug('built authorization URL: %s', result)
+        logger.debug("built authorization URL: %s", result)
         request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
         request.session[settings.OAUTH2_SESSION_RETURN_KEY] = return_url
-        logger.debug('stored session state for user %s: state=%s, return_url=%s', request.user, state, return_url)
+        logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
         return result
 
     def fetch_token(self, request: http.HttpRequest) -> Token:
@@ -102,7 +102,7 @@ class AuthorizationCodeWorkflow:
             'client_id': self.client.client_id,
         }
         token_request = self._prepare_client_request(self.client.driver.token_url, data=data)
-        logger.debug('sending token request to %s', self.client.driver.token_url)
+        logger.debug("sending token request to %s", self.client.driver.token_url)
         try:
             response = self.session.send(token_request)
             response.raise_for_status()
@@ -112,7 +112,7 @@ class AuthorizationCodeWorkflow:
             raise IOError(exc)
         token_data = TokenData.from_response(request.user, self.client, response)
 
-        logger.debug('sending resource request to %s', self.client.driver.resource_url)
+        logger.debug("sending resource request to %s", self.client.driver.resource_url)
         try:
             response = self.session.get(
                 self.client.driver.resource_url, headers={'Authorization': token_data.authorization}
@@ -120,7 +120,7 @@ class AuthorizationCodeWorkflow:
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error(exc)
-            raise IOError(f'An error occurred while communicating with {self.client.description}')
+            raise IOError(f"An error occurred while communicating with {self.client.description}")
         token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
         attrs = {
@@ -131,7 +131,7 @@ class AuthorizationCodeWorkflow:
         token, created = Token.objects.update_or_create(
             user=request.user, client=self.client, resource_id=token_data.resource_id, defaults=attrs
         )
-        logger.info('%s token %s obtained for user %s', self.client.driver.description, token, request.user)
+        logger.info("%s token %s obtained for user %s", self.client.driver.description, token, request.user)
         return token
 
     def _prepare_client_request(
@@ -150,10 +150,10 @@ class AuthorizationCodeWorkflow:
 
     def validate_state(self, request: http.HttpRequest) -> None:
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
-        logger.debug('fetched session state for user %s: state=%s', request.user, state)
+        logger.debug("fetched session state for user %s: state=%s", request.user, state)
         if request.GET['state'] != state:
-            logger.error('state mismatch: %s received, %s expected.', request.GET['state'], state)
-            raise ValueError('Authorization state mismatch.')
+            logger.error("state mismatch: %s received, %s expected.", request.GET['state'], state)
+            raise ValueError("Authorization state mismatch.")
 
     def validate_authorization_response(self, request: http.HttpRequest) -> None:
         if 'error' in request.GET:
@@ -162,7 +162,7 @@ class AuthorizationCodeWorkflow:
                 description=request.GET.get('error_description'),
                 uri=request.GET.get('error_uri'),
             )
-            logger.error(f'Authorization request error: {exc}')
+            logger.error(f"Authorization request error: {exc}")
             raise exc
 
     def validate_token_response(self, response: requests.Response) -> None:
@@ -171,7 +171,7 @@ class AuthorizationCodeWorkflow:
             exc = exceptions.OAuth2Error(
                 error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
             )
-            logger.error(f'Token request error: {exc}')
+            logger.error(f"Token request error: {exc}")
             raise exc
 
     def get_return_url(self, request: http.HttpRequest) -> str:
