@@ -95,14 +95,16 @@ class AuthorizationCodeWorkflow:
         return result
 
     def fetch_token(self, request: http.HttpRequest) -> Token:
-        data = {
-            'grant_type': 'authorization_code',
-            'code': request.GET['code'],
-            'redirect_uri': utils.exposed_url(request, path=self.client.callback),
-            'client_id': self.client.client_id,
-        }
-        token_request = self._prepare_client_request(self.client.driver.token_url, data=data)
         logger.debug("sending token request to %s", self.client.driver.token_url)
+        token_request = self._prepare_client_request(
+            self.client.driver.token_url,
+            data={
+                'grant_type': 'authorization_code',
+                'code': request.GET['code'],
+                'redirect_uri': utils.exposed_url(request, path=self.client.callback),
+                'client_id': self.client.client_id,
+            },
+        )
         try:
             response = self.session.send(token_request)
             response.raise_for_status()
@@ -123,20 +125,20 @@ class AuthorizationCodeWorkflow:
             raise IOError(f"An error occurred while communicating with {self.client.description}")
         token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
-        attrs = {
-            k: getattr(token_data, k)
-            for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag']
-            if getattr(token_data, k) is not None
-        }
         token, created = Token.objects.update_or_create(
-            user=request.user, client=self.client, resource_id=token_data.resource_id, defaults=attrs
+            user=request.user,
+            client=self.client,
+            resource_id=token_data.resource_id,
+            defaults={
+                k: getattr(token_data, k)
+                for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag']
+                if getattr(token_data, k) is not None
+            },
         )
         logger.info("%s token %s obtained for user %s", self.client.driver.description, token, request.user)
         return token
 
-    def _prepare_client_request(
-        self, url: str, method: str = 'POST', data: dict = None, headers: dict = None
-    ) -> requests.PreparedRequest:
+    def _prepare_client_request(self, url: str, data: dict = None, headers: dict = None) -> requests.PreparedRequest:
         if data is None:
             data = {}
         if self.client.driver.http_basic_auth:
@@ -145,7 +147,7 @@ class AuthorizationCodeWorkflow:
             auth = None
             data['client_id'] = self.client.client_id
             data['client_secret'] = self.client.client_secret
-        request = requests.Request(method, url, data=data, headers=headers, auth=auth)
+        request = requests.Request('POST', url, data=data, headers=headers, auth=auth)
         return request.prepare()
 
     def validate_state(self, request: http.HttpRequest) -> None:
