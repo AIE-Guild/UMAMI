@@ -21,7 +21,6 @@ django-markdownx = "^2.0"
 psycopg2 = {version = "^2.7",optional = true}
 requests = "^2.21"
 
-
 [tool.poetry.dev-dependencies]
 flake8 = "^3.6"
 isort = "^4.3"
@@ -31,6 +30,11 @@ pytest-cov = "^2.6"
 coveralls = "^1.5"
 requests-mock = "^1.5"
 black = {version = "^18.0",allows-prereleases = true}
+
+[tool.black]
+line-length = 120
+py36 = true
+skip-string-normalization = true
 
 [build-system]
 requires = ["poetry>=0.12"]

@@ -79,6 +79,7 @@ class DiscordDriver(ClientDriver):
     """
     Discord API - https://discordapp.com/developers/docs/intro
     """
+
     http_basic_auth = False
     name = 'discord'
     description = 'Discord'
@@ -97,6 +98,7 @@ class BattleNetDriver(ClientDriver):
     """
     Battle.net API - https://develop.battle.net/documentation
     """
+
     http_basic_auth = False
     name = 'battle_net_us'
     description = 'Battle.net US'
@@ -115,6 +117,7 @@ class EVEOnlineDriver(ClientDriver):
     """
     EVE Online ESI - https://docs.esi.evetech.net/
     """
+
     http_basic_auth = False
     name = 'eve_online'
     description = 'EVE Online'

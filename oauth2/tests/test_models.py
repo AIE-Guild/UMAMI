@@ -14,7 +14,7 @@ def token_data():
         'access_token': secrets.token_urlsafe(64),
         'refresh_token': secrets.token_urlsafe(64),
         'expires_in': 3600,
-        'example_parameter': 'example_value'
+        'example_parameter': 'example_value',
     }
 
 
@@ -45,6 +45,6 @@ def test_create(tf_user, tf_client):
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),
-        expiry=timezone.now() + dt.timedelta(seconds=3600)
+        expiry=timezone.now() + dt.timedelta(seconds=3600),
     )
     assert isinstance(token, models.Token)

@@ -15,7 +15,7 @@ def tf_token(tf_user, tf_client):
         resource_id='012345',
         resource_tag='Test#1234',
         access_token=secrets.token_urlsafe(64),
-        token_type='bearer'
+        token_type='bearer',
     )
     return token
 

@@ -84,7 +84,7 @@ class AuthorizationCodeWorkflow:
             'client_id': self.client.client_id,
             'redirect_uri': utils.exposed_url(request, path=self.client.callback),
             'scope': ' '.join(self.client.scopes),
-            'state': state
+            'state': state,
         }
         target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
         result = parse.urlunsplit(target)
@@ -99,7 +99,7 @@ class AuthorizationCodeWorkflow:
             'grant_type': 'authorization_code',
             'code': request.GET['code'],
             'redirect_uri': utils.exposed_url(request, path=self.client.callback),
-            'client_id': self.client.client_id
+            'client_id': self.client.client_id,
         }
         token_request = self._prepare_client_request(self.client.driver.token_url, data=data)
         logger.debug('sending token request to %s', self.client.driver.token_url)
@@ -114,28 +114,29 @@ class AuthorizationCodeWorkflow:
 
         logger.debug('sending resource request to %s', self.client.driver.resource_url)
         try:
-            response = self.session.get(self.client.driver.resource_url,
-                                        headers={'Authorization': token_data.authorization})
+            response = self.session.get(
+                self.client.driver.resource_url, headers={'Authorization': token_data.authorization}
+            )
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error(exc)
             raise IOError(f'An error occurred while communicating with {self.client.description}')
         token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
-        attrs = {k: getattr(token_data, k) for k in
-                 ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag'] if
-                 getattr(token_data, k) is not None}
+        attrs = {
+            k: getattr(token_data, k)
+            for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag']
+            if getattr(token_data, k) is not None
+        }
         token, created = Token.objects.update_or_create(
-            user=request.user,
-            client=self.client,
-            resource_id=token_data.resource_id,
-            defaults=attrs
+            user=request.user, client=self.client, resource_id=token_data.resource_id, defaults=attrs
         )
         logger.info('%s token %s obtained for user %s', self.client.driver.description, token, request.user)
         return token
 
-    def _prepare_client_request(self, url: str, method: str = 'POST', data: dict = None,
-                                headers: dict = None) -> requests.PreparedRequest:
+    def _prepare_client_request(
+        self, url: str, method: str = 'POST', data: dict = None, headers: dict = None
+    ) -> requests.PreparedRequest:
         if data is None:
             data = {}
         if self.client.driver.http_basic_auth:
@@ -159,7 +160,7 @@ class AuthorizationCodeWorkflow:
             exc = exceptions.OAuth2Error(
                 error=request.GET['error'],
                 description=request.GET.get('error_description'),
-                uri=request.GET.get('error_uri')
+                uri=request.GET.get('error_uri'),
             )
             logger.error(f'Authorization request error: {exc}')
             raise exc
@@ -168,9 +169,7 @@ class AuthorizationCodeWorkflow:
         data = response.json()
         if 'error' in data:
             exc = exceptions.OAuth2Error(
-                error=data['error'],
-                description=data.get('error_description'),
-                uri=data.get('error_uri')
+                error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
             )
             logger.error(f'Token request error: {exc}')
             raise exc

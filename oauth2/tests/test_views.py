@@ -21,7 +21,7 @@ def client_obj(request):
         service=request.param,
         name='test_client',
         client_id=secrets.token_hex(16),
-        client_secret=secrets.token_urlsafe(16)
+        client_secret=secrets.token_urlsafe(16),
     )
 
 
@@ -43,10 +43,13 @@ def test_authorization_return_url(rf, user, client_obj, settings):
     response = views.AuthorizationView.as_view()(request, client_name=client_obj.name)
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == settings.OAUTH2_RETURN_URL
 
-    request = rf.get('{}?{}'.format(
-        reverse('oauth2:authorization', kwargs={'client_name': client_obj.name}),
-        urlencode({f'{settings.OAUTH2_RETURN_FIELD_NAME}': '/other'})
-    ), username=user.username)
+    request = rf.get(
+        '{}?{}'.format(
+            reverse('oauth2:authorization', kwargs={'client_name': client_obj.name}),
+            urlencode({f'{settings.OAUTH2_RETURN_FIELD_NAME}': '/other'}),
+        ),
+        username=user.username,
+    )
     response = views.AuthorizationView.as_view()(request, client_name=client_obj.name)
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
 
@@ -61,13 +64,15 @@ def test_token(rf, settings, user, client_obj, tf_resource_response, requests_mo
     requests_mock.post(
         client_obj.driver.token_url,
         json=expected,
-        headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')})
+        headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')},
+    )
     requests_mock.get(client_obj.driver.resource_url, json=tf_resource_response)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
         reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
-        {'code': code, 'state': state}, username=user.username
+        {'code': code, 'state': state},
+        username=user.username,
     )
     request.user = user
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
@@ -86,7 +91,8 @@ def test_token_error(rf, settings, user, client_obj):
     state = secrets.token_urlsafe(64)
     request = rf.get(
         reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
-        {'error': 'access_denied', 'state': state}, username=user.username
+        {'error': 'access_denied', 'state': state},
+        username=user.username,
     )
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
     response = views.TokenView.as_view()(request, client_name=client_obj.name)
@@ -98,7 +104,8 @@ def test_token_bogus(rf, settings, user, client_obj):
     state = secrets.token_urlsafe(64)
     request = rf.get(
         reverse('oauth2:token', kwargs={'client_name': client_obj.name}),
-        {'code': code, 'state': state}, username=user.username
+        {'code': code, 'state': state},
+        username=user.username,
     )
     request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_urlsafe(64)
     response = views.TokenView.as_view()(request, client_name=client_obj.name)

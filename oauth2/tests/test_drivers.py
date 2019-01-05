@@ -23,6 +23,7 @@ def test_registry_conflict():
         scopes = ('test',)
 
     with pytest.raises(AttributeError):
+
         class Bar(drivers.ClientDriver):
             name = 'foo'
             description = 'Foo'

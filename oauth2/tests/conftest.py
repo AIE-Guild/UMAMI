@@ -105,7 +105,7 @@ def tf_client(request):
         service=request.param,
         name='test_client',
         client_id=secrets.token_hex(16),
-        client_secret=secrets.token_urlsafe(16)
+        client_secret=secrets.token_urlsafe(16),
     )
 
 
@@ -116,6 +116,6 @@ def tf_resource_response():
         'battletag': 'User#1234',
         'username': 'User',
         'discriminator': '1234',
-        'CharacterID': 95465499,
-        'CharacterName': 'CCP Bartender'
+        'CharacterID': 95_465_499,
+        'CharacterName': 'CCP Bartender',
     }
