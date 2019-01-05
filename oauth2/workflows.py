@@ -101,15 +101,10 @@ class AuthorizationCodeWorkflow:
             'redirect_uri': utils.exposed_url(request, path=self.client.callback),
             'client_id': self.client.client_id
         }
-        if self.client.driver.http_basic_auth:
-            auth = (self.client.client_id, self.client.client_secret)
-        else:  # pragma: no cover
-            auth = None
-            data['client_secret'] = self.client.client_secret
-
+        token_request = self._prepare_client_request(self.client.driver.token_url, data=data)
+        logger.debug('sending token request to %s', self.client.driver.token_url)
         try:
-            logger.debug('sending token request to %s', self.client.driver.token_url)
-            response = self.session.post(self.client.driver.token_url, data=data, auth=auth)
+            response = self.session.send(token_request)
             response.raise_for_status()
             self.validate_token_response(response)
         except requests.RequestException as exc:
@@ -117,8 +112,8 @@ class AuthorizationCodeWorkflow:
             raise IOError(exc)
         token_data = TokenData.from_response(request.user, self.client, response)
 
+        logger.debug('sending resource request to %s', self.client.driver.resource_url)
         try:
-            logger.debug('sending resource request to %s', self.client.driver.resource_url)
             response = self.session.get(self.client.driver.resource_url,
                                         headers={'Authorization': token_data.authorization})
             response.raise_for_status()
@@ -138,6 +133,19 @@ class AuthorizationCodeWorkflow:
         )
         logger.info('%s token %s obtained for user %s', self.client.driver.description, token, request.user)
         return token
+
+    def _prepare_client_request(self, url: str, method: str = 'POST', data: dict = None,
+                                headers: dict = None) -> requests.PreparedRequest:
+        if data is None:
+            data = {}
+        if self.client.driver.http_basic_auth:
+            auth = (self.client.client_id, self.client.client_secret)
+        else:  # pragma: no cover
+            auth = None
+            data['client_id'] = self.client.client_id
+            data['client_secret'] = self.client.client_secret
+        request = requests.Request(method, url, data=data, headers=headers, auth=auth)
+        return request.prepare()
 
     def validate_state(self, request: http.HttpRequest) -> None:
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
