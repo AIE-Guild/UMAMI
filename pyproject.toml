@@ -30,6 +30,7 @@ pytest-django = "^3.4"
 pytest-cov = "^2.6"
 coveralls = "^1.5"
 requests-mock = "^1.5"
+black = {version = "^18.0",allows-prereleases = true}
 
 [build-system]
 requires = ["poetry>=0.12"]
