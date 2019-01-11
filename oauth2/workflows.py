@@ -1,7 +1,8 @@
 import datetime as dt
+import enum
 import logging
 import secrets
-from typing import Optional
+from typing import Optional, Dict, Tuple
 from urllib import parse
 
 import requests
@@ -52,6 +53,7 @@ class TokenData:
 
 class AuthorizationCodeWorkflow:
     session = requests.Session()
+    grant_params = {'authorization_code': ['code', 'redirect_uri'], 'refresh_token': ['refresh_token', 'redirect_uri']}
 
     def __init__(self, client_name: str) -> None:
         try:
@@ -96,14 +98,10 @@ class AuthorizationCodeWorkflow:
 
     def fetch_token(self, request: http.HttpRequest) -> Token:
         logger.debug("sending token request to %s", self.client.driver.token_url)
-        token_request = self._prepare_client_request(
-            self.client.driver.token_url,
-            data={
-                'grant_type': 'authorization_code',
-                'code': request.GET['code'],
-                'redirect_uri': utils.exposed_url(request, path=self.client.callback),
-                'client_id': self.client.client_id,
-            },
+        token_request = self._prepare_grant_request(
+            'authorization_code',
+            code=request.GET['code'],
+            redirect_uri=utils.exposed_url(request, path=self.client.callback),
         )
         try:
             response = self.session.send(token_request)
@@ -138,16 +136,22 @@ class AuthorizationCodeWorkflow:
         logger.info("%s token %s obtained for user %s", self.client.driver.description, token, request.user)
         return token
 
-    def _prepare_client_request(self, url: str, data: dict = None, headers: dict = None) -> requests.PreparedRequest:
-        if data is None:
-            data = {}
+    def _prepare_grant_request(self, grant: str, **kwargs) -> requests.PreparedRequest:
+        data = {'scope': ' '.join(self.client.scopes)}
+        auth = None
+        try:
+            for param in self.grant_params[grant]:
+                try:
+                    data[param] = kwargs[param]
+                except KeyError:
+                    raise ValueError(f"Grant type '{grant}' requires '{param}' parameter.")
+        except KeyError:
+            raise ValueError(f"Grant type '{grant}' not recognized.")
         if self.client.driver.http_basic_auth:
             auth = (self.client.client_id, self.client.client_secret)
         else:  # pragma: no cover
-            auth = None
-            data['client_id'] = self.client.client_id
-            data['client_secret'] = self.client.client_secret
-        request = requests.Request('POST', url, data=data, headers=headers, auth=auth)
+            data.update({'client_id': self.client.client_id, 'client_secret': self.client.client_secret})
+        request = requests.Request('POST', self.client.driver.token_url, data=data, auth=auth)
         return request.prepare()
 
     def validate_state(self, request: http.HttpRequest) -> None:

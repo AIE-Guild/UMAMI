@@ -26,7 +26,7 @@ def tf_resource_response():
         'battletag': 'User#1234',
         'username': 'User',
         'discriminator': '1234',
-        'CharacterID': 95_465_499,
+        'CharacterID': 95465499,
         'CharacterName': 'CCP Bartender',
     }
 
