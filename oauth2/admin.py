@@ -4,7 +4,7 @@ from oauth2.models import Client, Token
 
 
 @admin.register(Client)
-class RedirectAdmin(admin.ModelAdmin):
+class ClientAdmin(admin.ModelAdmin):
     list_display = ('name', 'service', 'enabled', 'client_id', 'callback')
     list_display_links = ('name',)
     list_editable = ('enabled',)
@@ -14,7 +14,7 @@ class RedirectAdmin(admin.ModelAdmin):
 
 
 @admin.register(Token)
-class RedirectAdmin(admin.ModelAdmin):
+class TokenAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'client', 'resource_id', 'resource_tag', 'token_type', 'expiry')
     list_display_links = ('id',)
     fields = (
