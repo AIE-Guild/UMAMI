@@ -52,22 +52,38 @@ class Client(models.Model):
             return
 
 
+class Resource(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.PROTECT)
+    key = models.CharField(verbose_name=_('key'), max_length=64)
+    tag = models.CharField(verbose_name=_('tag'), max_length=64, blank=True, default='')
+
+    class Meta:
+        unique_together = ('user', 'client')
+
+    def __str__(self):
+        return str(self.key)
+
+
 class Token(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
-    client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.CASCADE)
-    resource_id = models.CharField(verbose_name=_('resource ID'), max_length=64, blank=True, default='')
-    resource_tag = models.CharField(verbose_name=_('resource tag'), max_length=64, blank=True, default='')
+    resource = models.OneToOneField('Resource', verbose_name=_('resource'), on_delete=models.CASCADE)
     token_type = models.CharField(verbose_name=_('token type'), max_length=64, default='bearer')
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
 
     class Meta:
-        unique_together = ('user', 'client', 'resource_id')
+        unique_together = ('user', 'resource')
 
     def __str__(self):
         return str(self.id)
+
+    @property
+    def client(self):
+        return self.resource.client
 
     @property
     def authorization(self):

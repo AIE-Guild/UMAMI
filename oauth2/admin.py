@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from oauth2.models import Client, Token
+from oauth2.models import Client, Resource, Token
 
 
 @admin.register(Client)
@@ -13,27 +13,24 @@ class ClientAdmin(admin.ModelAdmin):
     save_on_top = True
 
 
+@admin.register(Resource)
+class ResourceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'client', 'key', 'tag')
+    list_display_links = ('id',)
+    fields = ('id', 'user', 'client', 'key', 'tag')
+    readonly_fields = ('id', 'user', 'client', 'key', 'tag')
+    save_on_top = True
+
+
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'client', 'resource_id', 'resource_tag', 'token_type', 'expiry')
+    list_display = ('id', 'user', 'client', 'resource', 'token_type', 'expiry')
     list_display_links = ('id',)
-    fields = (
-        'id',
-        'user',
-        'client',
-        'resource_id',
-        'resource_tag',
-        'token_type',
-        'access_token',
-        'refresh_token',
-        'expiry',
-    )
+    fields = ('id', 'user', 'client', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
     readonly_fields = (
         'id',
         'user',
-        'client',
-        'resource_id',
-        'resource_tag',
+        'resource',
         'token_type',
         'access_token',
         'refresh_token',
