@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'bootstrap4',
     'markdownx',
+    'oauth2'
 ]
 
 #
@@ -188,13 +189,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'console': {
-            'format': '%(asctime)s %(name)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(name)s [%(levelname)s] %(message)s'
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'console'
+            'formatter': 'console',
         },
         'null': {
             'class': 'logging.NullHandler',
@@ -203,7 +204,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': env('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
         },
         'django.template': {
             'handlers': ['null'],
@@ -212,6 +213,6 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': env('DJANGO_LOG_LEVEL', 'INFO'),
+        'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
     }
 }
