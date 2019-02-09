@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 
-from django.utils.crypto import get_random_string
 import dj_database_url
+from django.utils.crypto import get_random_string
 from environs import Env
 
 #
@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'bootstrap4',
     'markdownx',
-    'oauth2'
+    'oauth2',
 ]
 
 #
@@ -103,9 +103,7 @@ REDIRECT_SECURE = env.bool('REDIRECT_SECURE', True)
 #
 # Services
 #
-DATABASES = {
-    'default': dj_database_url.config(default='sqlite:///test.db', conn_max_age=600)
-}
+DATABASES = {'default': dj_database_url.config(default='sqlite:///test.db', conn_max_age=600)}
 EMAIL_HOST = env('EMAIL_HOST', 'localhost')
 EMAIL_PORT = env.int('EMAIL_PORT', 25)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', None)
@@ -134,18 +132,10 @@ SOCIALACCOUNT_QUERY_EMAIL = env.bool('SOCIALACCOUNT_QUERY_EMAIL', True)
 SOCIALACCOUNT_STORE_TOKENS = env.bool('SOCIALACCOUNT_STORE_TOKENS', False)
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 #
@@ -178,7 +168,7 @@ TEMPLATES = [
             ],
             'debug': True,
         },
-    },
+    }
 ]
 
 #
@@ -187,32 +177,14 @@ TEMPLATES = [
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'console': {
-            'format': '%(asctime)s %(name)s [%(levelname)s] %(message)s'
-        }
-    },
+    'formatters': {'console': {'format': '%(asctime)s %(name)s [%(levelname)s] %(message)s'}},
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-        'null': {
-            'class': 'logging.NullHandler',
-        }
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'console'},
+        'null': {'class': 'logging.NullHandler'},
     },
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
-        },
-        'django.template': {
-            'handlers': ['null'],
-            'propagate': False
-        }
+        'django': {'handlers': ['console'], 'level': env('DJANGO_LOG_LEVEL', 'INFO').upper()},
+        'django.template': {'handlers': ['null'], 'propagate': False},
     },
-    'root': {
-        'handlers': ['console'],
-        'level': env('DJANGO_LOG_LEVEL', 'INFO').upper(),
-    }
+    'root': {'handlers': ['console'], 'level': env('DJANGO_LOG_LEVEL', 'INFO').upper()},
 }

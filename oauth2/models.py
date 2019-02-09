@@ -28,7 +28,7 @@ class Client(models.Model):
 
     @property
     def scopes(self) -> Optional[tuple]:
-        driver = drivers.ClientDriver.create(self.service)
+        driver = drivers.ClientDriver.factory(self.service)
         if driver is None:
             return
         if self.scope_override:
@@ -42,7 +42,7 @@ class Client(models.Model):
 
     @property
     def driver(self) -> drivers.ClientDriver:
-        return drivers.ClientDriver.create(self.service)
+        return drivers.ClientDriver.factory(self.service)
 
     @property
     def callback(self):

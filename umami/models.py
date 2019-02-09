@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from concurrency.fields import AutoIncVersionField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from concurrency.fields import AutoIncVersionField
 from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
 

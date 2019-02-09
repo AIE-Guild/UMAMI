@@ -2,7 +2,7 @@
 import re
 
 from django import template
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 
 register = template.Library()
 

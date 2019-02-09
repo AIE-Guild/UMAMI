@@ -1,6 +1,6 @@
 import abc
 from collections import namedtuple
-from typing import Mapping
+from typing import Mapping, Union
 
 APIResource = namedtuple('APIResource', 'key tag')
 
@@ -17,11 +17,11 @@ class ClientDriver(metaclass=abc.ABCMeta):
         super().__init_subclass__(**kwargs)
 
     @classmethod
-    def create(cls, name) -> 'ClientDriver':
+    def factory(cls, name) -> Union['ClientDriver', None]:
         try:
             return cls._registry[name]()
         except KeyError:
-            return
+            return None
 
     @classmethod
     def get_driver_names(cls):

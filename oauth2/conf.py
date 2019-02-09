@@ -1,5 +1,5 @@
 from appconf import AppConf
-from django.conf import settings
+from django.conf import settings  # pylint: disable=unused-import
 
 
 class OAuth2AppConf(AppConf):

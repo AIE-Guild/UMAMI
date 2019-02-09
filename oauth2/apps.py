@@ -6,4 +6,4 @@ class OAuth2Config(AppConfig):
     verbose_name = 'OAuth2 Client'
 
     def ready(self) -> None:
-        import oauth2.conf
+        import oauth2.conf  # pylint: disable=unused-import

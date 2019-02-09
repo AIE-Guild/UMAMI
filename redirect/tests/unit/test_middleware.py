@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from redirect.models import Redirect
 from redirect.middleware import RedirectServiceMiddleware
+from redirect.models import Redirect
+
 
 @pytest.fixture()
 def redir():
     return RedirectServiceMiddleware(lambda x: 'spam')
+
 
 def test_hit(rf, settings, redir):
     settings.REDIRECT_HOST = 'example.com'
@@ -17,6 +19,7 @@ def test_hit(rf, settings, redir):
     assert response.status_code == 302
     assert response['Location'] == 'https://www.example.org'
 
+
 def test_miss(rf, settings, redir):
     settings.REDIRECT_HOST = 'example.com'
     Redirect.objects.create(path='/test', location='https://www.example.org')
@@ -24,6 +27,7 @@ def test_miss(rf, settings, redir):
     request.META['HTTP_HOST'] = 'example.com'
     response = redir(request)
     assert response.status_code == 404
+
 
 def test_nomatch(rf, settings, redir):
     settings.REDIRECT_HOST = 'example.com'

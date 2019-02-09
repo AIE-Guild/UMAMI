@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from django.conf import settings
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.template.response import TemplateResponse
 
-from django.conf import settings
 from redirect.models import Redirect
 
 logger = logging.getLogger('umami.redirect')

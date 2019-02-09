@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-import uuid
 import re
+import uuid
 from urllib.parse import urljoin
 
 from concurrency.fields import AutoIncVersionField
-from redirect.conf import settings
-from django.db import models
 from django.core import validators
+from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from redirect.conf import settings
 
 
 class URLPathValidator(validators.RegexValidator):
