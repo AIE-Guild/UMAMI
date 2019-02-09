@@ -1,5 +1,5 @@
 [run]
-omit = tests/* env/* virtualenv/*
+omit = */tests/* */env/* */venv/* */virtualenv/*
 branch = True
 
 [report]
