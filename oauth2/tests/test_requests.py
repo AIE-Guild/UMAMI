@@ -24,12 +24,19 @@ def tf_token(tf_user, tf_client):
 def test_token_auth(tf_user, tf_client, tf_token, requests_mock):
     requests_mock.get('https://test.aie-guild.org', text='fert!')
     auth = BearerTokenAuth(tf_user, tf_client)
-    response = requests.get('https://test.aie-guild.org', auth=auth)
-    assert response.request.headers['Authorization'] == f'Bearer {tf_token.access_token}'
+    requests.get('https://test.aie-guild.org', auth=auth)
+    assert requests_mock.request_history[0].headers['Authorization'] == f'Bearer {tf_token.access_token}'
 
 
 def test_token_missing(tf_user, tf_client, requests_mock):
     requests_mock.get('https://test.aie-guild.org', text='fert!')
+    auth = BearerTokenAuth(tf_user, tf_client)
+    with pytest.raises(AuthorizationRequired):
+        requests.get('https://test.aie-guild.org', auth=auth)
+
+
+def test_token_fail(tf_user, tf_client, tf_token, requests_mock):
+    requests_mock.get('https://test.aie-guild.org', status_code=403)
     auth = BearerTokenAuth(tf_user, tf_client)
     with pytest.raises(AuthorizationRequired):
         requests.get('https://test.aie-guild.org', auth=auth)
