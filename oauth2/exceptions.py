@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-class OAuth2Error(Exception):
+class OAuth2Error(ValueError):
     """OAuth2 workflow errors."""
 
     def __init__(self, error: str, description: Optional[str] = None, uri: Optional[str] = None) -> None:
@@ -17,3 +17,7 @@ class OAuth2Error(Exception):
         if self.uri:
             text += f' ({self.uri})'
         return text
+
+
+class AuthorizationRequired(ValueError):
+    """Current token is invalid."""
