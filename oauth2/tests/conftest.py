@@ -110,12 +110,17 @@ def tf_client(request):
 
 
 @pytest.fixture()
+def tf_resource(request, tf_user, tf_client):
+    return models.Resource.objects.create(user=tf_user, client=tf_client, key='12345', tag='Ralff')
+
+
+@pytest.fixture()
 def tf_resource_response():
     return {
         'id': secrets.token_hex(16),
         'battletag': 'User#1234',
         'username': 'User',
         'discriminator': '1234',
-        'CharacterID': 95_465_499,
+        'CharacterID': 95465499,
         'CharacterName': 'CCP Bartender',
     }

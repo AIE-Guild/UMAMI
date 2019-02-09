@@ -2,7 +2,7 @@ import abc
 from collections import namedtuple
 from typing import Mapping
 
-APIResource = namedtuple('APIResource', 'id tag')
+APIResource = namedtuple('APIResource', 'key tag')
 
 
 class ClientDriver(metaclass=abc.ABCMeta):
@@ -91,7 +91,7 @@ class DiscordDriver(ClientDriver):
     resource_url = 'https://discordapp.com/api/v6/users/@me'
 
     def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(id=data['id'], tag=f"{data['username']}#{data['discriminator']}")
+        return APIResource(key=data['id'], tag=f"{data['username']}#{data['discriminator']}")
 
 
 class BattleNetDriver(ClientDriver):
@@ -110,7 +110,7 @@ class BattleNetDriver(ClientDriver):
     resource_url = 'https://us.battle.net/oauth/userinfo'
 
     def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(id=data['id'], tag=data['battletag'])
+        return APIResource(key=data['id'], tag=data['battletag'])
 
 
 class EVEOnlineDriver(ClientDriver):
@@ -129,4 +129,4 @@ class EVEOnlineDriver(ClientDriver):
     resource_url = 'https://esi.evetech.net/verify/'
 
     def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(id=str(data['CharacterID']), tag=data['CharacterName'])
+        return APIResource(key=str(data['CharacterID']), tag=data['CharacterName'])

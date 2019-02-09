@@ -38,13 +38,20 @@ def test_scope_override(tf_client):
     assert tf_client.scopes == ('foo', 'bar', 'baz')
 
 
-def test_create(tf_user, tf_client):
+def test_create_resource(tf_user, tf_client):
+    resource = models.Resource.objects.create(user=tf_user, client=tf_client, key='12345', tag='Ralff')
+    assert isinstance(resource, models.Resource)
+
+
+def test_create_token(tf_user, tf_client):
+    resource = models.Resource.objects.create(user=tf_user, client=tf_client, key='12345', tag='Ralff')
     token = models.Token.objects.create(
         user=tf_user,
-        client=tf_client,
+        resource=resource,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),
         expiry=timezone.now() + dt.timedelta(seconds=3600),
     )
     assert isinstance(token, models.Token)
+    assert token.client == resource.client

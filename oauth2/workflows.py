@@ -1,8 +1,7 @@
 import datetime as dt
-import enum
 import logging
 import secrets
-from typing import Optional, Dict, Tuple
+from typing import Optional
 from urllib import parse
 
 import requests
@@ -13,7 +12,7 @@ from django.utils import timezone
 
 from dataclasses import dataclass, field
 from oauth2 import exceptions, utils
-from oauth2.models import Client, Token
+from oauth2.models import Client, Resource, Token
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -123,13 +122,15 @@ class AuthorizationCodeWorkflow:
             raise IOError(f"An error occurred while communicating with {self.client.description}")
         token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
+        resource, created = Resource.objects.get_or_create(
+            user=request.user, client=self.client, key=token_data.resource_id, tag=token_data.resource_tag
+        )
         token, created = Token.objects.update_or_create(
             user=request.user,
-            client=self.client,
-            resource_id=token_data.resource_id,
+            resource=resource,
             defaults={
                 k: getattr(token_data, k)
-                for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'resource_tag']
+                for k in ['access_token', 'token_type', 'refresh_token', 'expiry']
                 if getattr(token_data, k) is not None
             },
         )
