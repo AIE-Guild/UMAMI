@@ -22,7 +22,7 @@ install:
   - python manage.py collectstatic --noinput
 
 script:
-  - pytest --cov
+  - pytest --cov=umami --cov=oauth2 --cov=redirect
 
 after_success: coveralls
 
