@@ -11,9 +11,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-    ]
+    dependencies = [migrations.swappable_dependency(settings.AUTH_USER_MODEL)]
 
     operations = [
         migrations.CreateModel(
@@ -21,7 +19,18 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.SlugField(max_length=64, unique=True, verbose_name='name')),
-                ('service', models.CharField(choices=[('discord', 'Discord'), ('battle_net_us', 'Battle.net US'), ('eve_online', 'EVE Online')], max_length=64, verbose_name='service')),
+                (
+                    'service',
+                    models.CharField(
+                        choices=[
+                            ('discord', 'Discord'),
+                            ('battle_net_us', 'Battle.net US'),
+                            ('eve_online', 'EVE Online'),
+                        ],
+                        max_length=64,
+                        verbose_name='service',
+                    ),
+                ),
                 ('enabled', models.BooleanField(default=True, verbose_name='enabled')),
                 ('client_id', models.CharField(max_length=191, verbose_name='client id')),
                 ('client_secret', models.CharField(max_length=191, verbose_name='client secret')),
@@ -34,8 +43,18 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('key', models.CharField(max_length=64, verbose_name='key')),
                 ('tag', models.CharField(blank=True, default='', max_length=64, verbose_name='tag')),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='oauth2.Client', verbose_name='client')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='user')),
+                (
+                    'client',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to='oauth2.Client', verbose_name='client'
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='user'
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
@@ -46,16 +65,20 @@ class Migration(migrations.Migration):
                 ('access_token', models.TextField(verbose_name='access token')),
                 ('refresh_token', models.TextField(blank=True, default='', verbose_name='refresh token')),
                 ('expiry', models.DateTimeField(blank=True, null=True, verbose_name='expiry')),
-                ('resource', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='oauth2.Resource', verbose_name='resource')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='user')),
+                (
+                    'resource',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE, to='oauth2.Resource', verbose_name='resource'
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='user'
+                    ),
+                ),
             ],
         ),
-        migrations.AlterUniqueTogether(
-            name='token',
-            unique_together={('user', 'resource')},
-        ),
-        migrations.AlterUniqueTogether(
-            name='resource',
-            unique_together={('user', 'client')},
-        ),
+        migrations.AlterUniqueTogether(name='token', unique_together={('user', 'resource')}),
+        migrations.AlterUniqueTogether(name='resource', unique_together={('user', 'client')}),
     ]

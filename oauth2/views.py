@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import base
 
-from oauth2 import exceptions, models, workflows
+from oauth2 import exceptions, models
 from oauth2.workflows import AuthorizationCodeWorkflow
 
 logger = logging.getLogger(__name__)
@@ -55,3 +55,20 @@ class TokenView(LoginRequiredMixin, base.View):
         messages.success(request, f'Authorization obtained from {flow.verbose_name}')
         return_url = flow.get_return_url(request)
         return http.HttpResponseRedirect(return_url)
+
+
+class ClientDumpView(LoginRequiredMixin, base.TemplateView):
+    template_name = 'client_dump.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        resources = models.Resource.objects.filter(user=self.request.user)
+        context['resources'] = {}
+        for client in models.Client.objects.filter(enabled=True):
+            try:
+                resource = resources.get(client=client)
+            except models.Resource.DoesNotExist:
+                context['resources'][client.name] = ""
+            else:
+                context['resources'][client.name] = str(resource)
+        return context

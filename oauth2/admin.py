@@ -27,15 +27,7 @@ class TokenAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'client', 'resource', 'token_type', 'expiry')
     list_display_links = ('id',)
     fields = ('id', 'user', 'client', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
-    readonly_fields = (
-        'id',
-        'user',
-        'resource',
-        'token_type',
-        'access_token',
-        'refresh_token',
-        'expiry',
-    )
+    readonly_fields = ('id', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
     save_on_top = True
 
     def has_add_permission(self, request, obj=None):

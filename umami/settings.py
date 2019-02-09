@@ -189,13 +189,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'console': {
-            'format': '%(asctime)s %(name)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(name)s [%(levelname)s] %(message)s'
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'console'
+            'formatter': 'console',
         },
         'null': {
             'class': 'logging.NullHandler',
