@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.contrib import admin
 from concurrency.admin import ConcurrentModelAdmin
+from django.contrib import admin
 
 from redirect.models import Redirect
 

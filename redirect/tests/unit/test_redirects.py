@@ -4,6 +4,7 @@ from django.core.validators import ValidationError
 
 from redirect.models import Redirect, URLPathValidator
 
+
 def test_validator():
     validator = URLPathValidator()
     assert validator('test') is None
@@ -17,6 +18,7 @@ def test_validator():
     with pytest.raises(ValidationError):
         validator('/test/foo;bar;baz')
 
+
 def test_path():
     redirect = Redirect.objects.create(path='test', location='https://www.example.com')
     assert redirect.path == '/test'
@@ -26,9 +28,11 @@ def test_path():
         redirect = Redirect(path='test3?foo=bar', location='https://www.example.com')
         redirect.full_clean()
 
+
 def test_location():
     redirect = Redirect.objects.create(path='test', location='https://www.example.com')
     assert redirect.location == 'https://www.example.com'
+
 
 def test_url(settings):
     settings.REDIRECT_HOST = 'www.foo.com'
@@ -40,4 +44,3 @@ def test_url(settings):
     settings.REDIRECT_SECURE = False
     redirect = Redirect(path='/test', location='https://www.example.com')
     assert redirect.url == 'http://www.foo.com/test'
-

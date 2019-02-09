@@ -31,4 +31,5 @@ class TokenAdmin(admin.ModelAdmin):
     save_on_top = True
 
     def has_add_permission(self, request, obj=None):
+        # pylint: disable=arguments-differ
         return False

@@ -4,7 +4,7 @@ from oauth2 import drivers
 
 
 def test_driver(service):
-    driver = drivers.ClientDriver.create(service.name)
+    driver = drivers.ClientDriver.factory(service.name)
     assert driver.name == service.name
     assert driver.description == service.description
     assert driver.authorization_url == service.authorization_url

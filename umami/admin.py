@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.contrib import admin
 from concurrency.admin import ConcurrentModelAdmin
+from django.contrib import admin
 from markdownx.admin import MarkdownxModelAdmin
 
 from umami.models import Bulletin

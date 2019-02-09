@@ -30,6 +30,7 @@ pytest-cov = "^2.6"
 coveralls = "^1.5"
 requests-mock = "^1.5"
 black = {version = "^18.0",allows-prereleases = true}
+pylint = "^2.2"
 
 [tool.black]
 line-length = 120
