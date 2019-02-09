@@ -108,8 +108,6 @@ class AuthorizationCodeWorkflow:
             self.validate_token_response(response)
         except requests.RequestException as exc:
             logger.error(f"failed to fetch access token: {exc}")
-            logger.debug(f"request: headers={response.request.headers}, data={response.request.body}")
-            logger.debug(f"response: headers={response.headers}, data={response.json()}")
             raise IOError(f"Failed to fetch access token from {self.client.service}.")
         token_data = TokenData.from_response(request.user, self.client, response)
 
@@ -121,8 +119,6 @@ class AuthorizationCodeWorkflow:
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error(f"failed to fetch resource details: {exc}")
-            logger.debug(f"request: headers={response.request.headers}, data={response.request.body}")
-            logger.debug(f"response: headers={response.headers}, data={response.json()}")
             raise IOError(f"Failed to fetch resource details from {self.client.service}.")
         token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
 
