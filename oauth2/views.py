@@ -4,6 +4,7 @@ from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
 from django.views.generic import base
 
 from oauth2 import exceptions, models
@@ -65,12 +66,15 @@ class ClientDumpView(LoginRequiredMixin, base.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         resources = models.Resource.objects.filter(users=self.request.user)
-        context['resources'] = {}
+        context['clients'] = {}
         for client in models.Client.objects.filter(enabled=True):
+            url = '{}?next={}'.format(
+                reverse('oauth2:authorization', kwargs={'client_name': client.name}), reverse('oauth2:dump')
+            )
             try:
                 resource = resources.get(client=client)
             except models.Resource.DoesNotExist:
-                context['resources'][client.name] = ""
+                context['clients'][client.name] = {'url': url, 'resource': ''}
             else:
-                context['resources'][client.name] = str(resource)
+                context['clients'][client.name] = {'url': url, 'resource': str(resource)}
         return context

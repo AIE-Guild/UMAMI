@@ -4,8 +4,8 @@ import pytest
 import requests
 
 from oauth2.exceptions import AuthorizationRequiredError
-from oauth2.requests import TokenAuth
 from oauth2.models import Token
+from oauth2.requests import TokenAuth
 
 
 def test_token_auth(tf_token, requests_mock):

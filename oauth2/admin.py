@@ -5,10 +5,10 @@ from oauth2.models import Client, Resource, Token
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'service', 'enabled', 'client_id', 'callback')
+    list_display = ('service', 'name', 'enabled', 'client_id', 'callback')
     list_display_links = ('name',)
     list_editable = ('enabled',)
-    fields = ('name', 'service', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
+    fields = ('service', 'name', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
     readonly_fields = ('callback', 'scopes')
     prepopulated_fields = {'name': ('service',)}
     save_on_top = True

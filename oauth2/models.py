@@ -1,5 +1,5 @@
-import logging
 import datetime as dt
+import logging
 import uuid
 from typing import Dict, Optional
 
@@ -8,8 +8,8 @@ from django import http
 from django.conf import settings
 from django.db import models
 from django.urls import NoReverseMatch, reverse
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from oauth2 import drivers, exceptions, utils
 from oauth2.core import TokenData
