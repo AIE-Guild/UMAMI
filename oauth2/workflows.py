@@ -27,8 +27,6 @@ class TokenData:
     refresh_token: str = ''
     expires_in: int = None
     timestamp: dt.datetime = field(default_factory=timezone.now)
-    resource_id: str = ''
-    resource_tag: str = ''
 
     @property
     def expiry(self) -> Optional[dt.datetime]:
@@ -76,14 +74,14 @@ class AuthorizationCodeWorkflow:
             The fully parametrized URL to redirect the user to for authorization.
 
         """
-        target = parse.urlsplit(self.client.driver.authorization_url)
+        target = parse.urlsplit(self.client.authorization_url)
         state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
         if return_url is None:
             return_url = settings.OAUTH2_RETURN_URL
         args = {
             'response_type': 'code',
             'client_id': self.client.client_id,
-            'redirect_uri': utils.exposed_url(request, path=self.client.callback),
+            'redirect_uri': self.client.redirect_url(request),
             'scope': ' '.join(self.client.scopes),
             'state': state,
         }
@@ -95,36 +93,9 @@ class AuthorizationCodeWorkflow:
         logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
         return result
 
-    def fetch_token(self, request: http.HttpRequest) -> Token:
-        logger.debug("sending token request to %s", self.client.driver.token_url)
-        token_request = self._prepare_grant_request(
-            'authorization_code',
-            code=request.GET['code'],
-            redirect_uri=utils.exposed_url(request, path=self.client.callback),
-        )
-        try:
-            response = self.session.send(token_request)
-            response.raise_for_status()
-            self.validate_token_response(response)
-        except requests.RequestException as exc:
-            logger.error(f"failed to fetch access token: {exc}")
-            raise IOError(f"Failed to fetch access token from {self.client.service}.")
-        token_data = TokenData.from_response(request.user, self.client, response)
-
-        logger.debug("sending resource request to %s", self.client.driver.resource_url)
-        try:
-            response = self.session.get(
-                self.client.driver.resource_url, headers={'Authorization': token_data.authorization}
-            )
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error(f"failed to fetch resource details: {exc}")
-            raise IOError(f"Failed to fetch resource details from {self.client.service}.")
-        token_data.resource_id, token_data.resource_tag = self.client.driver.get_resource_ids(response.json())
-
-        resource, created = Resource.objects.get_or_create(
-            user=request.user, client=self.client, key=token_data.resource_id, tag=token_data.resource_tag
-        )
+    def get_access_token(self, request: http.HttpRequest) -> Token:
+        token_data = self._fetch_access_token(request)
+        resource = self._fetch_resource_info(request, token_data)
         token, created = Token.objects.update_or_create(
             resource=resource,
             defaults={
@@ -133,26 +104,50 @@ class AuthorizationCodeWorkflow:
                 if getattr(token_data, k) is not None
             },
         )
-        logger.info("%s token %s obtained for user %s", self.client.driver.description, token, request.user)
+        logger.info(
+            "%s token %s obtained for user %s, resource %s", self.client.description, token, request.user, resource
+        )
         return token
 
-    def _prepare_grant_request(self, grant: str, **kwargs) -> requests.PreparedRequest:
-        data = {'grant_type': grant, 'scope': ' '.join(self.client.scopes)}
+    def _fetch_access_token(self, request: http.HttpRequest) -> TokenData:
         auth = None
-        try:
-            for param in self.grant_params[grant]:
-                try:
-                    data[param] = kwargs[param]
-                except KeyError:
-                    raise ValueError(f"Grant type '{grant}' requires '{param}' parameter.")
-        except KeyError:
-            raise ValueError(f"Grant type '{grant}' not recognized.")
-        if self.client.driver.http_basic_auth:
+        payload = {
+            'grant_type': 'authorization_code',
+            'code': request.GET['code'],
+            'redirect_uri': self.client.redirect_url(request),
+            'scope': ' '.join(self.client.scopes),
+        }
+        if self.client.http_basic_auth:
             auth = (self.client.client_id, self.client.client_secret)
-        else:  # pragma: no cover
-            data.update({'client_id': self.client.client_id, 'client_secret': self.client.client_secret})
-        request = requests.Request('POST', self.client.driver.token_url, data=data, auth=auth)
-        return request.prepare()
+        else:
+            payload.update({'client_id': self.client.client_id, 'client_secret': self.client.client_secret})
+
+        logger.debug("sending token request to %s", self.client.token_url)
+        try:
+            response = self.session.post(self.client.token_url, data=payload, auth=auth)
+            response.raise_for_status()
+            self.validate_token_response(response)
+        except requests.RequestException as exc:
+            logger.error(f"failed to fetch access token: {exc}")
+            raise IOError(f"Failed to fetch access token from {self.client.service}.")
+        return TokenData.from_response(request.user, self.client, response)
+
+    def _fetch_resource_info(self, request: http.HttpRequest, token: TokenData) -> Resource:
+        logger.debug("sending resource request to %s", self.client.resource_url)
+        try:
+            response = self.session.get(self.client.resource_url, headers={'Authorization': token.authorization})
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error(f"failed to fetch resource details: {exc}")
+            raise IOError(f"Failed to fetch resource details from {self.client.service}.")
+        resource_info = response.json()
+        resource, created = Resource.objects.get_or_create(
+            user=request.user,
+            client=self.client,
+            key=self.client.get_resource_key(resource_info),
+            tag=self.client.get_resource_tag(resource_info),
+        )
+        return resource
 
     def validate_state(self, request: http.HttpRequest) -> None:
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)

@@ -49,7 +49,7 @@ class TokenView(LoginRequiredMixin, base.View):
             return http.HttpResponseForbidden(exc)
 
         try:
-            flow.fetch_token(request)
+            flow.get_access_token(request)
         except IOError as exc:
             return http.HttpResponse(exc, status=503)
         messages.success(request, f'Authorization obtained from {flow.verbose_name}')

@@ -5,10 +5,11 @@ from typing import Dict, Optional
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models, transaction
+from django import http
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers
+from oauth2 import drivers, utils
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -26,30 +27,57 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def scopes(self) -> Optional[tuple]:
-        driver = drivers.ClientDriver.factory(self.service)
-        if driver is None:
+    def redirect_url(self, request: http.HttpRequest) -> Optional[str]:
+        try:
+            path = reverse('oauth2:token', kwargs={'client_name': self.name})
+        except NoReverseMatch:
             return
-        if self.scope_override:
-            return tuple(self.scope_override.split())
-        else:
-            return driver.scopes
+        return utils.exposed_url(request, path)
 
-    @property
-    def description(self):
-        return self.driver.description
+    def get_resource_key(self, data: Dict) -> Optional[str]:
+        return self.driver.get_resource_key(data)
+
+    def get_resource_tag(self, data: Dict) -> Optional[str]:
+        return self.driver.get_resource_tag(data)
 
     @property
     def driver(self) -> drivers.ClientDriver:
         return drivers.ClientDriver.factory(self.service)
 
     @property
-    def callback(self):
-        try:
-            return reverse('oauth2:token', kwargs={'client_name': self.name})
-        except NoReverseMatch:
-            return
+    def http_basic_auth(self) -> bool:
+        return self.driver.http_basic_auth
+
+    @property
+    def scopes(self) -> Optional[tuple]:
+        if self.scope_override:
+            return tuple(self.scope_override.split())
+        else:
+            return self.driver.scopes
+
+    @property
+    def description(self):
+        return self.driver.description
+
+    @property
+    def authorization_url(self) -> str:
+        return self.driver.authorization_url
+
+    @property
+    def token_url(self) -> str:
+        return self.driver.token_url
+
+    @property
+    def verification_url(self) -> str:
+        return self.driver.verification_url
+
+    @property
+    def revocation_url(self) -> str:
+        return self.driver.revocation_url
+
+    @property
+    def resource_url(self) -> str:
+        return self.driver.resource_url
 
 
 class Resource(models.Model):
