@@ -10,9 +10,7 @@ from oauth2.requests import TokenAuth
 
 @pytest.fixture()
 def tf_token(tf_user, tf_resource):
-    token = Token.objects.create(
-        user=tf_user, resource=tf_resource, access_token=secrets.token_urlsafe(64), token_type='bearer'
-    )
+    token = Token.objects.create(resource=tf_resource, access_token=secrets.token_urlsafe(64), token_type='bearer')
     return token
 
 

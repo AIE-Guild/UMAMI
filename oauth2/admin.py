@@ -15,19 +15,22 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'client', 'key', 'tag')
+    list_display = ('id', 'client', 'user', 'key', 'tag')
     list_display_links = ('id',)
-    fields = ('id', 'user', 'client', 'key', 'tag')
-    readonly_fields = ('id', 'user', 'client', 'key', 'tag')
+    fields = ('id', 'client', 'user', ('key', 'tag'))
+    readonly_fields = ('id', 'client', 'user', 'key', 'tag')
+    list_filter = ('client', 'user')
+    search_fields = ('client', 'user')
     save_on_top = True
 
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'client', 'resource', 'token_type', 'expiry')
+    list_display = ('id', 'client', 'user', 'resource', 'token_type', 'expiry')
     list_display_links = ('id',)
-    fields = ('id', 'user', 'client', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
-    readonly_fields = ('id', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
+    fields = ('id', 'client', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
+    readonly_fields = ('id', 'client', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
+    search_fields = ('client', 'user')
     save_on_top = True
 
     def has_add_permission(self, request, obj=None):

@@ -68,18 +68,18 @@ class Resource(models.Model):
 
 class Token(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
     resource = models.OneToOneField('Resource', verbose_name=_('resource'), on_delete=models.CASCADE)
     token_type = models.CharField(verbose_name=_('token type'), max_length=64, default='bearer')
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
 
-    class Meta:
-        unique_together = ('user', 'resource')
-
     def __str__(self):
         return str(self.id)
+
+    @property
+    def user(self):
+        return self.resource.user
 
     @property
     def client(self):

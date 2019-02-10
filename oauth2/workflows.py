@@ -126,7 +126,6 @@ class AuthorizationCodeWorkflow:
             user=request.user, client=self.client, key=token_data.resource_id, tag=token_data.resource_tag
         )
         token, created = Token.objects.update_or_create(
-            user=request.user,
             resource=resource,
             defaults={
                 k: getattr(token_data, k)

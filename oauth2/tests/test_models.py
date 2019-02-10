@@ -46,7 +46,6 @@ def test_create_resource(tf_user, tf_client):
 def test_create_token(tf_user, tf_client):
     resource = models.Resource.objects.create(user=tf_user, client=tf_client, key='12345', tag='Ralff')
     token = models.Token.objects.create(
-        user=tf_user,
         resource=resource,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
