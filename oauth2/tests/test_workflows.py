@@ -1,4 +1,3 @@
-# pylint: disable=too-many-arguments
 import datetime as dt
 import secrets
 
@@ -17,18 +16,6 @@ def token_response():
         'refresh_token': secrets.token_urlsafe(64),
         'expires_in': 3600,
         'comment': 'This is a test token.',
-    }
-
-
-@pytest.fixture(scope='session')
-def tf_resource_response():
-    return {
-        'id': secrets.token_hex(16),
-        'battletag': 'User#1234',
-        'username': 'User',
-        'discriminator': '1234',
-        'CharacterID': 95465499,
-        'CharacterName': 'CCP Bartender',
     }
 
 
