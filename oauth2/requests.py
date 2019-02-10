@@ -47,5 +47,7 @@ class TokenAuth(AuthBase):
 
         """
         request.register_hook('response', self._handle_response)
+        if self.token.is_stale:
+            self.token.refresh()
         request.headers['Authorization'] = self.token.authorization
         return request

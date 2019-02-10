@@ -49,14 +49,29 @@ def test_create_token(tf_user, tf_client, tf_resource):
     assert token.client == tf_resource.client
 
 
-def test_refresh_token(requests_mock, tf_client, tf_token, tf_datestr, token_response):
-    requests_mock.post(tf_client.token_url, json=token_response, headers={'Date': tf_datestr})
+def test_token_not_state(tf_token):
+    assert not tf_token.is_stale
+
+
+def test_token_is_state(tf_token):
+    tf_token.timestamp = tf_token.timestamp - dt.timedelta(seconds=tf_token.expires_in)
+    tf_token.save()
+    assert tf_token.is_stale
+
+
+def test_token_no_expiry(tf_token):
+    tf_token.expires_in = None
+    tf_token.save()
+
+
+def test_refresh_token(requests_mock, tf_client, tf_token, tf_datestr, tf_token_response):
+    requests_mock.post(tf_client.token_url, json=tf_token_response, headers={'Date': tf_datestr})
     tf_token.refresh()
     assert requests_mock.request_history[0].method == 'POST'
     assert requests_mock.request_history[0].url == tf_client.token_url
-    assert tf_token.access_token == token_response['access_token']
-    assert tf_token.refresh_token == token_response['refresh_token']
-    assert tf_token.scope == token_response['scope']
+    assert tf_token.access_token == tf_token_response['access_token']
+    assert tf_token.refresh_token == tf_token_response['refresh_token']
+    assert tf_token.scope == tf_token_response['scope']
 
 
 def test_refresh_token_error(requests_mock, tf_client, tf_token, tf_error_response):
@@ -73,7 +88,7 @@ def test_refresh_token_fail(requests_mock, tf_client, tf_token, tf_error_respons
     assert 'Failed to fetch access token' in str(exc.value)
 
 
-def test_refresh_token_not_supported(caplog, tf_client, tf_token, tf_datestr, token_response):
+def test_refresh_token_not_supported(tf_client, tf_token, tf_datestr):
     tf_token.refresh_token = ''
     tf_token.save()
     with pytest.raises(exceptions.TokenRefreshError) as exc:

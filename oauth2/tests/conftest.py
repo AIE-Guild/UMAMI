@@ -84,7 +84,7 @@ def response_factory():
 
 
 @pytest.fixture()
-def token_response():
+def tf_token_response():
     return {
         'token_type': 'Bearer',
         'access_token': secrets.token_urlsafe(64),

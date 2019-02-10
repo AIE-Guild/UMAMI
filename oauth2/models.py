@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from oauth2 import drivers, exceptions, utils
 from oauth2.core import TokenData
@@ -102,6 +103,8 @@ class Resource(models.Model):
 
 
 class Token(models.Model):
+    REFRESH_COEFFICIENT = 0.5
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resource = models.OneToOneField('Resource', verbose_name=_('resource'), on_delete=models.CASCADE)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
@@ -122,6 +125,12 @@ class Token(models.Model):
         result = self.timestamp + dt.timedelta(seconds=self.expires_in)
         logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
         return result
+
+    @property
+    def is_stale(self):
+        if self.expires_in is None:
+            return False
+        return timezone.now() > self.timestamp + (self.REFRESH_COEFFICIENT * dt.timedelta(seconds=self.expires_in))
 
     @property
     def client(self):
