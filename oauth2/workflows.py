@@ -1,4 +1,3 @@
-import datetime as dt
 import logging
 import secrets
 from typing import Optional
@@ -7,58 +6,13 @@ from urllib import parse
 import requests
 from django import http
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.utils import timezone
 
-from dataclasses import dataclass, field
-from oauth2 import exceptions, utils
+from oauth2 import exceptions
+from oauth2.core import TokenData
 from oauth2.models import Client, Resource, Token
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-
-@dataclass()
-class TokenData:
-    user: User
-    client: Client
-    access_token: str
-    token_type: str = 'Bearer'
-    refresh_token: str = ''
-    expires_in: int = None
-    timestamp: dt.datetime = field(default_factory=timezone.now)
-    scope: str = ''
-    redirect_uri: str = ''
-
-    @property
-    def expiry(self) -> Optional[dt.datetime]:
-        if self.expires_in is None:
-            return None
-        result = self.timestamp + dt.timedelta(seconds=self.expires_in)
-        logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
-        return result
-
-    @property
-    def authorization(self):
-        return f'{self.token_type.title()} {self.access_token}'
-
-    @classmethod
-    def from_response(cls, user: User, client: Client, response: requests.Response) -> 'TokenData':
-        cls.validate_token_response(response)
-        ts = utils.parse_http_date(response.headers['Date'])
-        whitelist = ('access_token', 'token_type', 'refresh_token', 'expires_in', 'scope')
-        args = {k: v for k, v in response.json().items() if k in whitelist}
-        return cls(user, client, timestamp=ts, **args)
-
-    @classmethod
-    def validate_token_response(cls, response: requests.Response) -> None:
-        data = response.json()
-        if 'error' in data:
-            exc = exceptions.OAuth2Error(
-                error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
-            )
-            logger.error("Token request error: %s", exc)
-            raise exc
 
 
 class AuthorizationCodeWorkflow:
@@ -142,7 +96,7 @@ class AuthorizationCodeWorkflow:
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)
             raise IOError(f"Failed to fetch access token from {self.client.service}.")
-        token = TokenData.from_response(request.user, self.client, response)
+        token = TokenData.from_response(response)
         token.redirect_uri = payload['redirect_uri']
         return token
 

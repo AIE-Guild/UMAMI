@@ -1,10 +1,9 @@
-import datetime as dt
 import secrets
 
 import pytest
 import requests
 
-from oauth2 import exceptions, models, workflows
+from oauth2 import exceptions, models
 from oauth2.workflows import AuthorizationCodeWorkflow
 
 
@@ -17,37 +16,6 @@ def token_response():
         'expires_in': 3600,
         'comment': 'This is a test token.',
     }
-
-
-def test_token_data_from_response(response_factory, token_response, tf_user, tf_client, tf_datestr, tf_date):
-    response = response_factory(token_response, date=tf_datestr)
-    token_data = workflows.TokenData.from_response(user=tf_user, client=tf_client, response=response)
-    assert token_data.user == tf_user
-    assert token_data.client == tf_client
-    assert all(
-        [
-            getattr(token_data, k) == token_response.get(k)
-            for k in ['access_token', 'token_type', 'refresh_token', 'expires_in']
-        ]
-    )
-    assert token_data.timestamp == tf_date
-    assert token_data.expiry == tf_date + dt.timedelta(seconds=token_data.expires_in)
-
-
-def test_token_data_non_expiring(response_factory, token_response, tf_user, tf_client, tf_datestr, tf_date):
-    token_response = {k: v for k, v in token_response.items() if k != 'expires_in'}
-    response = response_factory(token_response, date=tf_datestr)
-    token_data = workflows.TokenData.from_response(user=tf_user, client=tf_client, response=response)
-    assert token_data.user == tf_user
-    assert token_data.client == tf_client
-    assert all(
-        [
-            getattr(token_data, k) == token_response.get(k)
-            for k in ['access_token', 'token_type', 'refresh_token', 'expires_in']
-        ]
-    )
-    assert token_data.timestamp == tf_date
-    assert token_data.expiry is None
 
 
 def test_get_authorization_url(tf_client, rf, settings):
