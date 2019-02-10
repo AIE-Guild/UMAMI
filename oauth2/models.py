@@ -27,12 +27,15 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-    def redirect_url(self, request: http.HttpRequest) -> Optional[str]:
+    @property
+    def callback(self) -> Optional[str]:
         try:
-            path = reverse('oauth2:token', kwargs={'client_name': self.name})
+            return reverse('oauth2:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
             return
-        return utils.exposed_url(request, path)
+
+    def redirect_url(self, request: http.HttpRequest) -> Optional[str]:
+        return utils.exposed_url(request, path=self.callback)
 
     def get_resource_key(self, data: Dict) -> Optional[str]:
         return self.driver.get_resource_key(data)
