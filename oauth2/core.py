@@ -23,14 +23,6 @@ class TokenData:
     redirect_uri: str = ''
 
     @property
-    def expiry(self) -> Optional[dt.datetime]:
-        if self.expires_in is None:
-            return None
-        result = self.timestamp + dt.timedelta(seconds=self.expires_in)
-        logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
-        return result
-
-    @property
     def authorization(self):
         return f'{self.token_type.title()} {self.access_token}'
 

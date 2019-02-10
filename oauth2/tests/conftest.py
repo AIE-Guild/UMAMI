@@ -83,6 +83,18 @@ def response_factory():
     return factory
 
 
+@pytest.fixture()
+def token_response():
+    return {
+        'token_type': 'Bearer',
+        'access_token': secrets.token_urlsafe(64),
+        'refresh_token': secrets.token_urlsafe(64),
+        'expires_in': 3600,
+        'scope': 'foo bar baz',
+        'comment': 'This is a sample response.',
+    }
+
+
 @pytest.fixture(scope='session')
 def tf_datestr():
     return 'Sun, 12 Jan 1997 12:00:00 UTC'
@@ -111,9 +123,24 @@ def tf_client(request):
 
 
 @pytest.fixture()
-def tf_resource(request, tf_user, tf_client):
+def tf_resource(tf_user, tf_client):
     obj = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
     obj.users.add(tf_user)
+    return obj
+
+
+@pytest.fixture()
+def tf_token(tf_user, tf_client, tf_resource):
+    obj = models.Token.objects.create(
+        resource=tf_resource,
+        token_type='bearer',
+        access_token=secrets.token_urlsafe(64),
+        refresh_token=secrets.token_urlsafe(64),
+        timestamp=timezone.now(),
+        expires_in=3600,
+        scope='email identify',
+        redirect_uri='https://test.aie-guild.org/auth/token',
+    )
     return obj
 
 
@@ -126,4 +153,13 @@ def tf_resource_response():
         'discriminator': '1234',
         'CharacterID': 95465499,
         'CharacterName': 'CCP Bartender',
+    }
+
+
+@pytest.fixture()
+def tf_error_response():
+    return {
+        "error": "invalid_request",
+        "error_description": "Request was missing the 'redirect_uri' parameter.",
+        "error_uri": "See the full API docs at https://example.com/docs/access_token",
     }

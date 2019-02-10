@@ -7,17 +7,6 @@ from oauth2 import exceptions, models
 from oauth2.workflows import AuthorizationCodeWorkflow
 
 
-@pytest.fixture(scope='session')
-def token_response():
-    return {
-        'access_token': secrets.token_urlsafe(64),
-        'token_type': 'Bearer',
-        'refresh_token': secrets.token_urlsafe(64),
-        'expires_in': 3600,
-        'comment': 'This is a test token.',
-    }
-
-
 def test_get_authorization_url(tf_client, rf, settings):
     flow = AuthorizationCodeWorkflow(tf_client.name)
     driver = tf_client.driver

@@ -27,7 +27,6 @@ def test_token_data_from_response(response_factory, token_response, tf_datestr, 
         ]
     )
     assert token_data.timestamp == tf_date
-    assert token_data.expiry == tf_date + dt.timedelta(seconds=token_data.expires_in)
 
 
 def test_token_data_non_expiring(response_factory, token_response, tf_datestr, tf_date):
@@ -41,4 +40,3 @@ def test_token_data_non_expiring(response_factory, token_response, tf_datestr, t
         ]
     )
     assert token_data.timestamp == tf_date
-    assert token_data.expiry is None

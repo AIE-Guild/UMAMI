@@ -1,14 +1,17 @@
 import logging
+import datetime as dt
 import uuid
 from typing import Dict, Optional
 
+import requests
 from django import http
 from django.conf import settings
 from django.db import models
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers, utils, exceptions
+from oauth2 import drivers, exceptions, utils
+from oauth2.core import TokenData
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -101,15 +104,24 @@ class Resource(models.Model):
 class Token(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resource = models.OneToOneField('Resource', verbose_name=_('resource'), on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)
     token_type = models.CharField(verbose_name=_('token type'), max_length=64, default='bearer')
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
-    expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
+    expires_in = models.PositiveIntegerField(verbose_name=_('expires in'), blank=True, null=True)
     scope = models.TextField(verbose_name=_('scope'), blank=True, default='')
     redirect_uri = models.URLField(verbose_name=_('redirect URI'), blank=True, default='')
 
     def __str__(self):
         return str(self.id)
+
+    @property
+    def expiry(self) -> Optional[dt.datetime]:
+        if self.expires_in is None:
+            return None
+        result = self.timestamp + dt.timedelta(seconds=self.expires_in)
+        logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
+        return result
 
     @property
     def client(self):
@@ -118,3 +130,33 @@ class Token(models.Model):
     @property
     def authorization(self):
         return f'{self.token_type.title()} {self.access_token}'
+
+    def refresh(self) -> None:
+        if not self.refresh_token:
+            raise exceptions.TokenRefreshError(f"No authorization client found.")
+        auth = None
+        payload = {
+            'grant_type': 'refresh_token',
+            'refresh_token': self.refresh_token,
+            'redirect_uri': self.redirect_uri,
+            'scope': self.scope,
+        }
+        if self.client.http_basic_auth:
+            auth = (self.client.client_id, self.client.client_secret)
+        else:
+            payload.update({'client_id': self.client.client_id, 'client_secret': self.client.client_secret})
+
+        logger.debug("sending token request to %s", self.client.token_url)
+        try:
+            response = requests.post(self.client.token_url, data=payload, auth=auth)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error("failed to fetch access token: %s", exc)
+            raise IOError(f"Failed to fetch access token from {self.client.service}.")
+        data = TokenData.from_response(response)
+        self.timestamp = data.timestamp
+        self.access_token = data.access_token
+        self.refresh_token = data.refresh_token
+        self.expires_in = data.expires_in
+        self.scope = data.scope
+        self.save()

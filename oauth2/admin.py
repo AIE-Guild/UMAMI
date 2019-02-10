@@ -27,7 +27,7 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'resource', 'token_type', 'scope', 'expiry')
+    list_display = ('id', 'client', 'resource', 'token_type', 'scope', 'timestamp')
     list_display_links = ('id',)
     fields = (
         'id',
@@ -37,6 +37,8 @@ class TokenAdmin(admin.ModelAdmin):
         'scope',
         'access_token',
         'refresh_token',
+        'timestamp',
+        'expires_in',
         'expiry',
         'redirect_uri',
     )
@@ -48,6 +50,8 @@ class TokenAdmin(admin.ModelAdmin):
         'scope',
         'access_token',
         'refresh_token',
+        'timestamp',
+        'expires_in',
         'expiry',
         'redirect_uri',
     )

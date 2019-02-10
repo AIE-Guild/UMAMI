@@ -67,7 +67,7 @@ class AuthorizationCodeWorkflow:
             resource=resource,
             defaults={
                 k: getattr(token_data, k)
-                for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'scope', 'redirect_uri']
+                for k in ['timestamp', 'access_token', 'token_type', 'refresh_token', 'scope', 'redirect_uri']
                 if getattr(token_data, k) is not None
             },
         )
