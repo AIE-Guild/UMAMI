@@ -9,6 +9,7 @@ from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
 from oauth2 import drivers, utils
+from oauth2.exceptions import AuthorizationRequiredError
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

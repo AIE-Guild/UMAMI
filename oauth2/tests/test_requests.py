@@ -3,7 +3,7 @@ import secrets
 import pytest
 import requests
 
-from oauth2.exceptions import AuthorizationRequired
+from oauth2.exceptions import AuthorizationRequiredError
 from oauth2.models import Token
 from oauth2.requests import TokenAuth
 
@@ -24,5 +24,5 @@ def test_token_auth(tf_token, requests_mock):
 def test_token_fail(tf_token, requests_mock):
     requests_mock.get('https://test.aie-guild.org', status_code=403)
     auth = TokenAuth(tf_token)
-    with pytest.raises(AuthorizationRequired):
+    with pytest.raises(AuthorizationRequiredError):
         requests.get('https://test.aie-guild.org', auth=auth)

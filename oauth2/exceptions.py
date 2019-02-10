@@ -19,5 +19,9 @@ class OAuth2Error(Exception):
         return text
 
 
-class AuthorizationRequired(Exception):
+class AuthorizationRequiredError(Exception):
     """Current token is invalid."""
+
+
+class ClientMissingError(Exception):
+    """No client is configured for the resource."""
