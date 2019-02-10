@@ -10,28 +10,28 @@ class ClientAdmin(admin.ModelAdmin):
     list_editable = ('enabled',)
     fields = ('name', 'service', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
     readonly_fields = ('callback', 'scopes')
+    prepopulated_fields = {'name': ('service',)}
     save_on_top = True
 
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'key', 'tag')
+    list_display = ('id', 'client', 'key', 'tag')
     list_display_links = ('id',)
-    fields = ('id', 'client', 'user', ('key', 'tag'))
-    readonly_fields = ('id', 'client', 'user', 'key', 'tag')
-    list_filter = ('client', 'user')
-    search_fields = ('client', 'user')
+    fields = ('id', 'client', ('key', 'tag'), 'users')
+    readonly_fields = ('id', 'client', 'key', 'tag', 'users')
+    list_filter = ('client',)
+    search_fields = ('client', 'users')
     save_on_top = True
 
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'resource', 'token_type', 'scope', 'expiry')
+    list_display = ('id', 'client', 'resource', 'token_type', 'scope', 'expiry')
     list_display_links = ('id',)
     fields = (
         'id',
         'client',
-        'user',
         'resource',
         'token_type',
         'scope',
@@ -43,7 +43,6 @@ class TokenAdmin(admin.ModelAdmin):
     readonly_fields = (
         'id',
         'client',
-        'user',
         'resource',
         'token_type',
         'scope',
@@ -52,7 +51,7 @@ class TokenAdmin(admin.ModelAdmin):
         'expiry',
         'redirect_uri',
     )
-    search_fields = ('client', 'user')
+    search_fields = ('client', 'resource__users')
     save_on_top = True
 
     def has_add_permission(self, request, obj=None):

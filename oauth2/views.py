@@ -64,7 +64,7 @@ class ClientDumpView(LoginRequiredMixin, base.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        resources = models.Resource.objects.filter(user=self.request.user)
+        resources = models.Resource.objects.filter(users=self.request.user)
         context['resources'] = {}
         for client in models.Client.objects.filter(enabled=True):
             try:
