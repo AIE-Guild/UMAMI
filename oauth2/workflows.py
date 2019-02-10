@@ -137,15 +137,5 @@ class AuthorizationCodeWorkflow:
             raise exc
 
     @classmethod
-    def validate_token_response(cls, response: requests.Response) -> None:
-        data = response.json()
-        if 'error' in data:
-            exc = exceptions.OAuth2Error(
-                error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
-            )
-            logger.error("Token request error: %s", exc)
-            raise exc
-
-    @classmethod
     def get_return_url(cls, request: http.HttpRequest) -> str:
         return request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)

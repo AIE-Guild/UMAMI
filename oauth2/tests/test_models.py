@@ -34,6 +34,7 @@ def test_create_resource(tf_user, tf_client):
 
 
 def test_create_token(tf_user, tf_client, tf_resource):
+    # pylint: disable=duplicate-code
     token = models.Token.objects.create(
         resource=tf_resource,
         token_type='bearer',

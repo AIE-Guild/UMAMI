@@ -1,6 +1,5 @@
 import datetime as dt
 import logging
-from typing import Optional
 
 import requests
 from django.utils import timezone
