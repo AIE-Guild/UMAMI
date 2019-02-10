@@ -8,8 +8,7 @@ from django.db import models
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers, utils
-from oauth2.exceptions import AuthorizationRequiredError
+from oauth2 import drivers, utils, exceptions
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -104,6 +103,8 @@ class Token(models.Model):
     access_token = models.TextField(verbose_name=_('access token'))
     refresh_token = models.TextField(verbose_name=_('refresh token'), blank=True, default='')
     expiry = models.DateTimeField(verbose_name=_('expiry'), blank=True, null=True)
+    scope = models.TextField(verbose_name=_('scope'), blank=True, default='')
+    redirect_uri = models.URLField(verbose_name=_('redirect URI'), blank=True, default='')
 
     def __str__(self):
         return str(self.id)

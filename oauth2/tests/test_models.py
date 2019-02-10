@@ -51,6 +51,8 @@ def test_create_token(tf_user, tf_client):
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),
         expiry=timezone.now() + dt.timedelta(seconds=3600),
+        scope='email identify',
+        redirect_uri='https://test.aie-guild.org/auth/token',
     )
     assert isinstance(token, models.Token)
     assert token.client == resource.client

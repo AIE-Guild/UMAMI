@@ -26,10 +26,32 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'resource', 'token_type', 'expiry')
+    list_display = ('id', 'client', 'user', 'resource', 'token_type', 'scope', 'expiry')
     list_display_links = ('id',)
-    fields = ('id', 'client', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
-    readonly_fields = ('id', 'client', 'user', 'resource', 'token_type', 'access_token', 'refresh_token', 'expiry')
+    fields = (
+        'id',
+        'client',
+        'user',
+        'resource',
+        'token_type',
+        'scope',
+        'access_token',
+        'refresh_token',
+        'expiry',
+        'redirect_uri',
+    )
+    readonly_fields = (
+        'id',
+        'client',
+        'user',
+        'resource',
+        'token_type',
+        'scope',
+        'access_token',
+        'refresh_token',
+        'expiry',
+        'redirect_uri',
+    )
     search_fields = ('client', 'user')
     save_on_top = True
 

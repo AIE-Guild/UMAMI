@@ -27,6 +27,8 @@ class TokenData:
     refresh_token: str = ''
     expires_in: int = None
     timestamp: dt.datetime = field(default_factory=timezone.now)
+    scope: str = ''
+    redirect_uri: str = ''
 
     @property
     def expiry(self) -> Optional[dt.datetime]:
@@ -43,7 +45,7 @@ class TokenData:
     @classmethod
     def from_response(cls, user: User, client: Client, response: requests.Response) -> 'TokenData':
         ts = utils.parse_http_date(response.headers['Date'])
-        whitelist = ('access_token', 'token_type', 'refresh_token', 'expires_in')
+        whitelist = ('access_token', 'token_type', 'refresh_token', 'expires_in', 'scope')
         args = {k: v for k, v in response.json().items() if k in whitelist}
         return cls(user, client, timestamp=ts, **args)
 
@@ -100,7 +102,7 @@ class AuthorizationCodeWorkflow:
             resource=resource,
             defaults={
                 k: getattr(token_data, k)
-                for k in ['access_token', 'token_type', 'refresh_token', 'expiry']
+                for k in ['access_token', 'token_type', 'refresh_token', 'expiry', 'scope', 'redirect_uri']
                 if getattr(token_data, k) is not None
             },
         )
@@ -130,7 +132,9 @@ class AuthorizationCodeWorkflow:
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)
             raise IOError(f"Failed to fetch access token from {self.client.service}.")
-        return TokenData.from_response(request.user, self.client, response)
+        token = TokenData.from_response(request.user, self.client, response)
+        token.redirect_uri = payload['redirect_uri']
+        return token
 
     def _fetch_resource_info(self, request: http.HttpRequest, token: TokenData) -> Resource:
         logger.debug("sending resource request to %s", self.client.resource_url)
