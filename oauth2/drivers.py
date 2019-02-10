@@ -1,6 +1,6 @@
 import abc
 from collections import namedtuple
-from typing import Mapping, Union, Optional
+from typing import Mapping, Optional, Union
 
 APIResource = namedtuple('APIResource', 'key tag')
 

@@ -2,10 +2,9 @@ import logging
 import uuid
 from typing import Dict, Optional
 
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.db import models, transaction
 from django import http
+from django.conf import settings
+from django.db import models
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -32,7 +31,7 @@ class Client(models.Model):
         try:
             return reverse('oauth2:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
-            return
+            return None
 
     def redirect_url(self, request: http.HttpRequest) -> Optional[str]:
         return utils.exposed_url(request, path=self.callback)

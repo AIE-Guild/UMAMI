@@ -31,7 +31,7 @@ class TokenData:
     @property
     def expiry(self) -> Optional[dt.datetime]:
         if self.expires_in is None:
-            return
+            return None
         result = self.timestamp + dt.timedelta(seconds=self.expires_in)
         logger.debug("calculated expiry=%s from timestamp=%s + expires_in=%s", result, self.timestamp, self.expires_in)
         return result
@@ -96,7 +96,7 @@ class AuthorizationCodeWorkflow:
     def get_access_token(self, request: http.HttpRequest) -> Token:
         token_data = self._fetch_access_token(request)
         resource = self._fetch_resource_info(request, token_data)
-        token, created = Token.objects.update_or_create(
+        token, __ = Token.objects.update_or_create(
             resource=resource,
             defaults={
                 k: getattr(token_data, k)
@@ -128,7 +128,7 @@ class AuthorizationCodeWorkflow:
             response.raise_for_status()
             self.validate_token_response(response)
         except requests.RequestException as exc:
-            logger.error(f"failed to fetch access token: {exc}")
+            logger.error("failed to fetch access token: %s", exc)
             raise IOError(f"Failed to fetch access token from {self.client.service}.")
         return TokenData.from_response(request.user, self.client, response)
 
@@ -138,10 +138,10 @@ class AuthorizationCodeWorkflow:
             response = self.session.get(self.client.resource_url, headers={'Authorization': token.authorization})
             response.raise_for_status()
         except requests.RequestException as exc:
-            logger.error(f"failed to fetch resource details: {exc}")
+            logger.error("failed to fetch resource details: %s", exc)
             raise IOError(f"Failed to fetch resource details from {self.client.service}.")
         resource_info = response.json()
-        resource, created = Resource.objects.get_or_create(
+        resource, __ = Resource.objects.get_or_create(
             user=request.user,
             client=self.client,
             key=self.client.get_resource_key(resource_info),
@@ -149,31 +149,35 @@ class AuthorizationCodeWorkflow:
         )
         return resource
 
-    def validate_state(self, request: http.HttpRequest) -> None:
+    @classmethod
+    def validate_state(cls, request: http.HttpRequest) -> None:
         state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
         logger.debug("fetched session state for user %s: state=%s", request.user, state)
         if request.GET['state'] != state:
             logger.error("state mismatch: %s received, %s expected.", request.GET['state'], state)
             raise ValueError("Authorization state mismatch.")
 
-    def validate_authorization_response(self, request: http.HttpRequest) -> None:
+    @classmethod
+    def validate_authorization_response(cls, request: http.HttpRequest) -> None:
         if 'error' in request.GET:
             exc = exceptions.OAuth2Error(
                 error=request.GET['error'],
                 description=request.GET.get('error_description'),
                 uri=request.GET.get('error_uri'),
             )
-            logger.error(f"Authorization request error: {exc}")
+            logger.error("Authorization request error: %s", exc)
             raise exc
 
-    def validate_token_response(self, response: requests.Response) -> None:
+    @classmethod
+    def validate_token_response(cls, response: requests.Response) -> None:
         data = response.json()
         if 'error' in data:
             exc = exceptions.OAuth2Error(
                 error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
             )
-            logger.error(f"Token request error: {exc}")
+            logger.error("Token request error: %s", exc)
             raise exc
 
-    def get_return_url(self, request: http.HttpRequest) -> str:
+    @classmethod
+    def get_return_url(cls, request: http.HttpRequest) -> str:
         return request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)

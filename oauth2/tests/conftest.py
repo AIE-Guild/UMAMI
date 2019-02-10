@@ -22,6 +22,7 @@ def service(request):
 def rf(rf):
     class UserSessionRequestFactory(RequestFactory):
         def generic(self, method, path, data='', content_type='application/octet-stream', secure=False, **extra):
+            # pylint: disable=too-many-arguments
             username = extra.get('username')
             headers = extra.get('headers')
             request = super().generic(method, path, data, content_type, secure, **extra)

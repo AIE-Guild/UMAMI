@@ -17,6 +17,7 @@ class AuthorizationView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
+        # pylint: disable=no-self-use
         client_name = kwargs.get('client_name')
         try:
             flow = AuthorizationCodeWorkflow(client_name)
@@ -32,6 +33,7 @@ class TokenView(LoginRequiredMixin, base.View):
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
+        # pylint: disable=no-self-use
         client_name = kwargs.get('client_name')
         try:
             flow = AuthorizationCodeWorkflow(client_name)

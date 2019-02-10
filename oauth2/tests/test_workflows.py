@@ -1,3 +1,4 @@
+# pylint: disable=too-many-arguments
 import datetime as dt
 import secrets
 
