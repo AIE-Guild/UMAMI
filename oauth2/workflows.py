@@ -44,10 +44,21 @@ class TokenData:
 
     @classmethod
     def from_response(cls, user: User, client: Client, response: requests.Response) -> 'TokenData':
+        cls.validate_token_response(response)
         ts = utils.parse_http_date(response.headers['Date'])
         whitelist = ('access_token', 'token_type', 'refresh_token', 'expires_in', 'scope')
         args = {k: v for k, v in response.json().items() if k in whitelist}
         return cls(user, client, timestamp=ts, **args)
+
+    @classmethod
+    def validate_token_response(cls, response: requests.Response) -> None:
+        data = response.json()
+        if 'error' in data:
+            exc = exceptions.OAuth2Error(
+                error=data['error'], description=data.get('error_description'), uri=data.get('error_uri')
+            )
+            logger.error("Token request error: %s", exc)
+            raise exc
 
 
 class AuthorizationCodeWorkflow:
@@ -128,7 +139,6 @@ class AuthorizationCodeWorkflow:
         try:
             response = self.session.post(self.client.token_url, data=payload, auth=auth)
             response.raise_for_status()
-            self.validate_token_response(response)
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)
             raise IOError(f"Failed to fetch access token from {self.client.service}.")
