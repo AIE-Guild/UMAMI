@@ -146,11 +146,11 @@ class AuthorizationCodeWorkflow:
             raise IOError(f"Failed to fetch resource details from {self.client.service}.")
         resource_info = response.json()
         resource, __ = Resource.objects.get_or_create(
-            user=request.user,
             client=self.client,
             key=self.client.get_resource_key(resource_info),
             tag=self.client.get_resource_tag(resource_info),
         )
+        resource.users.add(request.user)
         return resource
 
     @classmethod

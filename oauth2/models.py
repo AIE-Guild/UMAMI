@@ -84,16 +84,18 @@ class Client(models.Model):
 
 class Resource(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'), on_delete=models.CASCADE)
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, verbose_name=_('users'), related_name='resources', related_query_name='resource'
+    )
     client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.PROTECT)
     key = models.CharField(verbose_name=_('key'), max_length=64)
     tag = models.CharField(verbose_name=_('tag'), max_length=64, blank=True, default='')
 
     class Meta:
-        unique_together = ('user', 'client')
+        unique_together = ('client', 'key')
 
     def __str__(self):
-        return str(self.key)
+        return f"{self.key} ({self.tag})"
 
 
 class Token(models.Model):
@@ -108,10 +110,6 @@ class Token(models.Model):
 
     def __str__(self):
         return str(self.id)
-
-    @property
-    def user(self):
-        return self.resource.user
 
     @property
     def client(self):

@@ -112,7 +112,9 @@ def tf_client(request):
 
 @pytest.fixture()
 def tf_resource(request, tf_user, tf_client):
-    return models.Resource.objects.create(user=tf_user, client=tf_client, key='12345', tag='Ralff')
+    obj = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
+    obj.users.add(tf_user)
+    return obj
 
 
 @pytest.fixture()

@@ -15,12 +15,12 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'key', 'tag')
+    list_display = ('id', 'client', 'key', 'tag')
     list_display_links = ('id',)
-    fields = ('id', 'client', 'user', ('key', 'tag'))
-    readonly_fields = ('id', 'client', 'user', 'key', 'tag')
-    list_filter = ('client', 'user')
-    search_fields = ('client', 'user')
+    fields = ('id', 'client', 'users', ('key', 'tag'))
+    readonly_fields = ('id', 'client', 'users', 'key', 'tag')
+    list_filter = ('client',)
+    search_fields = ('client', 'users')
     save_on_top = True
 
 

@@ -31,7 +31,9 @@ class TokenAuth(AuthBase):
 
         """
         if response.status_code in (codes.UNAUTHORIZED, codes.FORBIDDEN):
-            raise AuthorizationRequiredError(f"{self.token.client} authorization token failed for user {self.token.user}")
+            raise AuthorizationRequiredError(
+                f"{self.token.client} authorization token failed for {self.token.resource}"
+            )
         return response
 
     def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
