@@ -1,6 +1,6 @@
 import abc
 from collections import namedtuple
-from typing import Mapping, Union
+from typing import Mapping, Optional, Union
 
 APIResource = namedtuple('APIResource', 'key tag')
 
@@ -71,8 +71,12 @@ class ClientDriver(metaclass=abc.ABCMeta):
         """API resource info endpoint."""
 
     @abc.abstractmethod
-    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        """Method to extract resource identifiers from an API resource response."""
+    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('id')
+
+    @abc.abstractmethod
+    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('battletag')
 
 
 class DiscordDriver(ClientDriver):
@@ -90,8 +94,14 @@ class DiscordDriver(ClientDriver):
     scopes = ('identify', 'email')
     resource_url = 'https://discordapp.com/api/v6/users/@me'
 
-    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(key=data['id'], tag=f"{data['username']}#{data['discriminator']}")
+    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('id')
+
+    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
+        try:
+            return f"{data['username']}#{data['discriminator']}"
+        except KeyError:
+            return None
 
 
 class BattleNetDriver(ClientDriver):
@@ -109,8 +119,11 @@ class BattleNetDriver(ClientDriver):
     scopes = ('wow.profile', 'sc2.profile')
     resource_url = 'https://us.battle.net/oauth/userinfo'
 
-    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(key=data['id'], tag=data['battletag'])
+    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('id')
+
+    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('battletag')
 
 
 class EVEOnlineDriver(ClientDriver):
@@ -128,5 +141,8 @@ class EVEOnlineDriver(ClientDriver):
     scopes = ('wow.profile', 'sc2.profile')
     resource_url = 'https://esi.evetech.net/verify/'
 
-    def get_resource_ids(self, data: Mapping[str, str]) -> APIResource:
-        return APIResource(key=str(data['CharacterID']), tag=data['CharacterName'])
+    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('CharacterID')
+
+    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
+        return data.get('CharacterName')

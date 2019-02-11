@@ -2,7 +2,7 @@ import requests
 from requests.auth import AuthBase
 from requests.status_codes import codes
 
-from oauth2.exceptions import AuthorizationRequired
+from oauth2.exceptions import AuthorizationRequiredError
 from oauth2.models import Token
 
 
@@ -31,7 +31,9 @@ class TokenAuth(AuthBase):
 
         """
         if response.status_code in (codes.UNAUTHORIZED, codes.FORBIDDEN):
-            raise AuthorizationRequired(f"{self.token.client} authorization token failed for user {self.token.user}")
+            raise AuthorizationRequiredError(
+                f"{self.token.client} authorization token failed for {self.token.resource}"
+            )
         return response
 
     def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
@@ -45,5 +47,7 @@ class TokenAuth(AuthBase):
 
         """
         request.register_hook('response', self._handle_response)
+        if self.token.is_stale:
+            self.token.refresh()
         request.headers['Authorization'] = self.token.authorization
         return request

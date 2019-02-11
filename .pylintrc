@@ -66,7 +66,9 @@ disable=fixme,
         too-few-public-methods,
         unused-argument,
         no-member,
-        no-else-return
+        no-else-return,
+        redefined-outer-name,
+        too-many-arguments
 
 
 # Enable the message, report, category or checker with the given id(s). You can

@@ -19,5 +19,9 @@ class OAuth2Error(Exception):
         return text
 
 
-class AuthorizationRequired(Exception):
+class AuthorizationRequiredError(Exception):
     """Current token is invalid."""
+
+
+class TokenRefreshError(Exception):
+    """An error has occurred while trying to refresh an access token."""

@@ -3,11 +3,24 @@
 {% load i18n %}
 {% block head_title %}{% trans "OAuth2 Client Dump" %}{% endblock head_title %}
 {% block content %}
-    <dl>
-    {% for client, resource in resources.items %}
-        <dt>{{ client }}</dt>
-        <dd>{{ resource }}</dd>
-    {%  endfor %}
-    </dl>
-
+    <div class="container">
+        <div class="row">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Client</th>
+                <th scope="col">Resource</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for client, client_data in clients.items %}
+                <tr>
+                    <td><a href="{{ client_data.url }}">{{ client }}</a></td>
+                    <td>{{ client_data.resource }}</td>
+                </tr>
+            {%  endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
 {% endblock content %}

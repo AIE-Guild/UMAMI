@@ -14,6 +14,7 @@ def test_driver(service):
 
 
 def test_registry_conflict():
+    # pylint: disable=unused-variable
     class Foo(drivers.ClientDriver):
         name = 'foo'
         description = 'Foo'
@@ -21,6 +22,13 @@ def test_registry_conflict():
         token_url = 'https://example.com/api/oauth2/token'
         revocation_url = 'https://example.com/api/oauth2/revoke'
         scopes = ('test',)
+        resource_url = 'https://example.com/api/userinfo'
+
+        def get_resource_key(self, data):
+            return data['userid']
+
+        def get_resource_tag(self, data):
+            return data['username']
 
     with pytest.raises(AttributeError):
 
@@ -31,3 +39,10 @@ def test_registry_conflict():
             token_url = 'https://example.com/api/oauth2/token'
             revocation_url = 'https://example.com/api/oauth2/revoke'
             scopes = ('test',)
+            resource_url = 'https://example.com/api/userinfo'
+
+            def get_resource_key(self, data):
+                return data['userid']
+
+            def get_resource_tag(self, data):
+                return data['username']
