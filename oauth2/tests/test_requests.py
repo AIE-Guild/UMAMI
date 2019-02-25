@@ -16,7 +16,7 @@ def test_token_auth(tf_token, requests_mock):
 
 
 def test_token_auth_refresh(tf_client, tf_token, requests_mock, tf_token_response, tf_datestr):
-    tf_token.timestamp = tf_token.timestamp - dt.timedelta(seconds=tf_token.expires_in * Token.REFRESH_COEFFICIENT)
+    tf_token.timestamp = tf_token.timestamp - dt.timedelta(seconds=tf_token.expires_in * Token.REFRESH_COEFFICIENT + 1)
     requests_mock.get('https://test.aie-guild.org', text='fert!')
     requests_mock.post(tf_client.token_url, json=tf_token_response, headers={'Date': tf_datestr})
     auth = TokenAuth(tf_token)
