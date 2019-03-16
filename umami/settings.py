@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'bootstrap4',
     'markdownx',
-    'oauth2',
+    'guildmaster',
 ]
 
 #

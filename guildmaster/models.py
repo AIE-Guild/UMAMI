@@ -11,8 +11,8 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers, exceptions, utils
-from oauth2.core import TokenData
+from guildmaster import drivers, exceptions, utils
+from guildmaster.core import TokenData
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

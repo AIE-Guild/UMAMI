@@ -1,4 +1,4 @@
-from oauth2 import exceptions
+from guildmaster import exceptions
 
 
 def test_oauth2_exception():

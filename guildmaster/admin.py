@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from oauth2.models import Client, Resource, Token
+from guildmaster.models import Client, Resource, Token
 
 
 @admin.register(Client)

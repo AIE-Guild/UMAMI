@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path
 
-from oauth2 import views
+from guildmaster import views
 
 app_name = 'oauth2'
 urlpatterns = [

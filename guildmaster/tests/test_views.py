@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import urlencode
 
-from oauth2 import views
+from guildmaster import views
 
 
 @pytest.fixture()
@@ -25,23 +25,23 @@ def test_authorization(rf, user, tf_client):
 def test_authorization_state(rf, user, tf_client, settings):
     request = rf.get(reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
-    assert request.session[settings.OAUTH2_SESSION_STATE_KEY] in response.url
+    assert request.session[settings.GUILDMASTER_SESSION_STATE_KEY] in response.url
 
 
 def test_authorization_return_url(rf, user, tf_client, settings):
     request = rf.get(reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
     views.AuthorizationView.as_view()(request, client_name=tf_client.name)
-    assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == settings.OAUTH2_RETURN_URL
+    assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == settings.GUILDMASTER_RETURN_URL
 
     request = rf.get(
         '{}?{}'.format(
             reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}),
-            urlencode({f'{settings.OAUTH2_RETURN_FIELD_NAME}': '/other'}),
+            urlencode({f'{settings.GUILDMASTER_RETURN_FIELD_NAME}': '/other'}),
         ),
         username=user.username,
     )
     views.AuthorizationView.as_view()(request, client_name=tf_client.name)
-    assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
+    assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == '/other'
 
 
 def test_token(rf, settings, user, tf_client, tf_resource_response, requests_mock):
@@ -63,7 +63,7 @@ def test_token(rf, settings, user, tf_client, tf_resource_response, requests_moc
         username=user.username,
     )
     request.user = user
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = state
     response = views.TokenView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 302
     assert requests_mock.called
@@ -82,7 +82,7 @@ def test_token_error(rf, settings, user, tf_client):
         {'error': 'access_denied', 'state': state},
         username=user.username,
     )
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = state
     response = views.TokenView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 403
 
@@ -95,6 +95,6 @@ def test_token_bogus(rf, settings, user, tf_client):
         {'code': code, 'state': state},
         username=user.username,
     )
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_urlsafe(64)
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = secrets.token_urlsafe(64)
     response = views.TokenView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 403

@@ -2,7 +2,7 @@ import secrets
 
 import pytest
 
-from oauth2 import core
+from guildmaster import core
 
 
 @pytest.fixture(scope='session')
