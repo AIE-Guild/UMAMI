@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
-from django.views.generic import base
+from django.views.generic import base, list
 
 from guildmaster import exceptions, models
 from guildmaster.workflows import AuthorizationCodeWorkflow
@@ -78,3 +78,7 @@ class ClientDumpView(LoginRequiredMixin, base.TemplateView):
             else:
                 context['clients'][client.name] = {'url': url, 'resource': str(resource)}
         return context
+
+
+class DiscordAccountListView(list.ListView):
+    model = models.DiscordAccount

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block head_title %}{% trans "OAuth2 Client Dump" %}{% endblock head_title %}
+{% block content %}
+    <h2>Discord Accounts</h2>
+    <p class="lead">These Discord accounts have been linked.</p>
+    <div class="row">
+        {% for account in object_list %}
+            <div class="column">
+                <div class="card">
+                  <img src="https://cdn.discordapp.com/avatars/{{ account.id }}/{{ account.avatar }}.png" class="card-img-top">
+                  <div class="card-body">
+                    <p class="card-text">{{ account }}</p>
+                  </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock content %}

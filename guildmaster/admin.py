@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from guildmaster.models import Client, Resource, Token
+from guildmaster.models import Client, Resource, Token, DiscordAccount
 
 
 @admin.register(Client)
@@ -61,3 +61,22 @@ class TokenAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         # pylint: disable=arguments-differ
         return False
+
+
+@admin.register(DiscordAccount)
+class DiscordAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled')
+    list_display_links = ('id', 'username')
+    fields = ('user', 'id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled', 'avatar', 'resource')
+    readonly_fields = (
+        'user',
+        'id',
+        'username',
+        'discriminator',
+        'email',
+        'verified',
+        'mfa_enabled',
+        'avatar',
+        'resource',
+    )
+    save_on_top = True

@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from guildmaster import drivers, exceptions, utils
 from guildmaster.core import TokenData
-from guildmaster.models import mixins
+from guildmaster.models import accounts, mixins
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -98,7 +98,18 @@ class ResourceManager(models.Manager):
         if created:
             logger.info(f"Added new resource: {resource}")
         else:
-            logger.info(f"Updated new resource: {resource}")
+            logger.info(f"Updated existing resource: {resource}")
+        if client.service == 'discord':
+            fields = {
+                k: v
+                for k, v in data.items()
+                if k in ['id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled', 'avatar']
+            }
+            account, created = accounts.DiscordAccount.objects.get_or_create(user=user, resource=resource, **fields)
+            if created:
+                logger.info(f"Added new account: {account}")
+            else:
+                logger.info(f"Updated existing account: {account}")
         return resource
 
 
