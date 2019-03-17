@@ -108,13 +108,7 @@ class AuthorizationCodeWorkflow:
         except requests.RequestException as exc:
             logger.error("failed to fetch resource details: %s", exc)
             raise IOError(f"Failed to fetch resource details from {self.client.service}.")
-        resource_info = response.json()
-        resource, __ = Resource.objects.get_or_create(
-            client=self.client,
-            key=self.client.get_resource_key(resource_info),
-            tag=self.client.get_resource_tag(resource_info),
-        )
-        resource.users.add(request.user)
+        resource = Resource.objects.add_linked_account(request.user, self.client, response.json())
         return resource
 
     @classmethod

@@ -13,6 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from guildmaster import drivers, exceptions, utils
 from guildmaster.core import TokenData
+from guildmaster.models import mixins
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -86,7 +87,22 @@ class Client(models.Model):
         return self.driver.resource_url
 
 
-class Resource(models.Model):
+class ResourceManager(models.Manager):
+    """A resource manager to add account linkages."""
+
+    def add_linked_account(self, user, client, data):
+        key = client.get_resource_key(data)
+        tag = client.get_resource_tag(data)
+        resource, created = Resource.objects.get_or_create(client=client, key=key, tag=tag)
+        resource.users.add(user)
+        if created:
+            logger.info(f"Added new resource: {resource}")
+        else:
+            logger.info(f"Updated new resource: {resource}")
+        return resource
+
+
+class Resource(mixins.TimestampMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     users = models.ManyToManyField(
         settings.AUTH_USER_MODEL, verbose_name=_('users'), related_name='resources', related_query_name='resource'
@@ -94,6 +110,8 @@ class Resource(models.Model):
     client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.PROTECT)
     key = models.CharField(verbose_name=_('key'), max_length=64)
     tag = models.CharField(verbose_name=_('tag'), max_length=64, blank=True, default='')
+
+    objects = ResourceManager()
 
     class Meta:
         unique_together = ('client', 'key')
