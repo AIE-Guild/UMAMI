@@ -3,9 +3,9 @@ from django.urls import path
 
 from guildmaster import views
 
-app_name = 'oauth2'
+app_name = 'guildmaster'
 urlpatterns = [
-    path('authorize/<slug:client_name>', views.AuthorizationView.as_view(), name='authorization'),
+    path('authorize/<slug:client_name>', views.AuthorizationView.as_view(), name='authorize'),
     path('token/<slug:client_name>', views.TokenView.as_view(), name='token'),
 ]
 

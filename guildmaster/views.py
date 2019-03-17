@@ -69,7 +69,7 @@ class ClientDumpView(LoginRequiredMixin, base.TemplateView):
         context['clients'] = {}
         for client in models.Client.objects.filter(enabled=True):
             url = '{}?next={}'.format(
-                reverse('oauth2:authorization', kwargs={'client_name': client.name}), reverse('oauth2:dump')
+                reverse('guildmaster:authorize', kwargs={'client_name': client.name}), reverse('guildmaster:dump')
             )
             try:
                 resource = resources.get(client=client)

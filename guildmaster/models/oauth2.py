@@ -34,7 +34,7 @@ class Client(models.Model):
     @property
     def callback(self) -> Optional[str]:
         try:
-            return reverse('oauth2:token', kwargs={'client_name': self.name})
+            return reverse('guildmaster:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
             return None
 

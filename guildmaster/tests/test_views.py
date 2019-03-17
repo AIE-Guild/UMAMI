@@ -16,26 +16,26 @@ def user():
 
 
 def test_authorization(rf, user, tf_client):
-    request = rf.get(reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(reverse('guildmaster:authorize', kwargs={'client_name': tf_client.name}), username=user.username)
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 302
     assert response.url.startswith(tf_client.driver.authorization_url)
 
 
 def test_authorization_state(rf, user, tf_client, settings):
-    request = rf.get(reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(reverse('guildmaster:authorize', kwargs={'client_name': tf_client.name}), username=user.username)
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert request.session[settings.GUILDMASTER_SESSION_STATE_KEY] in response.url
 
 
 def test_authorization_return_url(rf, user, tf_client, settings):
-    request = rf.get(reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(reverse('guildmaster:authorize', kwargs={'client_name': tf_client.name}), username=user.username)
     views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == settings.GUILDMASTER_RETURN_URL
 
     request = rf.get(
         '{}?{}'.format(
-            reverse('oauth2:authorization', kwargs={'client_name': tf_client.name}),
+            reverse('guildmaster:authorize', kwargs={'client_name': tf_client.name}),
             urlencode({f'{settings.GUILDMASTER_RETURN_FIELD_NAME}': '/other'}),
         ),
         username=user.username,
@@ -58,7 +58,7 @@ def test_token(rf, settings, user, tf_client, tf_resource_response, requests_moc
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
-        reverse('oauth2:token', kwargs={'client_name': tf_client.name}),
+        reverse('guildmaster:token', kwargs={'client_name': tf_client.name}),
         {'code': code, 'state': state},
         username=user.username,
     )
@@ -78,7 +78,7 @@ def test_token_error(rf, settings, user, tf_client):
     secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
-        reverse('oauth2:token', kwargs={'client_name': tf_client.name}),
+        reverse('guildmaster:token', kwargs={'client_name': tf_client.name}),
         {'error': 'access_denied', 'state': state},
         username=user.username,
     )
@@ -91,7 +91,7 @@ def test_token_bogus(rf, settings, user, tf_client):
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
-        reverse('oauth2:token', kwargs={'client_name': tf_client.name}),
+        reverse('guildmaster:token', kwargs={'client_name': tf_client.name}),
         {'code': code, 'state': state},
         username=user.username,
     )
