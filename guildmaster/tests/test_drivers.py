@@ -1,6 +1,6 @@
 import pytest
 
-from oauth2 import drivers
+from guildmaster import drivers
 
 
 def test_driver(service):

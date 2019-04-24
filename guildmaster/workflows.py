@@ -7,9 +7,9 @@ import requests
 from django import http
 from django.conf import settings
 
-from oauth2 import exceptions
-from oauth2.core import TokenData
-from oauth2.models import Client, Token
+from guildmaster import exceptions
+from guildmaster.core import TokenData
+from guildmaster.models import Client, Token
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -42,9 +42,9 @@ class AuthorizationCodeWorkflow:
 
         """
         target = parse.urlsplit(self.client.authorization_url)
-        state = secrets.token_urlsafe(settings.OAUTH2_STATE_BYTES)
+        state = secrets.token_urlsafe(settings.GUILDMASTER_STATE_BYTES)
         if return_url is None:
-            return_url = settings.OAUTH2_RETURN_URL
+            return_url = settings.GUILDMASTER_RETURN_URL
         args = {
             'response_type': 'code',
             'client_id': self.client.client_id,
@@ -55,8 +55,8 @@ class AuthorizationCodeWorkflow:
         target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
         result = parse.urlunsplit(target)
         logger.debug("built authorization URL: %s", result)
-        request.session[settings.OAUTH2_SESSION_STATE_KEY] = state
-        request.session[settings.OAUTH2_SESSION_RETURN_KEY] = return_url
+        request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = state
+        request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] = return_url
         logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
         return result
 
@@ -100,7 +100,7 @@ class AuthorizationCodeWorkflow:
 
     @classmethod
     def validate_state(cls, request: http.HttpRequest) -> None:
-        state = request.session.get(settings.OAUTH2_SESSION_STATE_KEY)
+        state = request.session.get(settings.GUILDMASTER_SESSION_STATE_KEY)
         logger.debug("fetched session state for user %s: state=%s", request.user, state)
         if request.GET['state'] != state:
             logger.error("state mismatch: %s received, %s expected.", request.GET['state'], state)
@@ -119,4 +119,4 @@ class AuthorizationCodeWorkflow:
 
     @classmethod
     def get_return_url(cls, request: http.HttpRequest) -> str:
-        return request.session.get(settings.OAUTH2_SESSION_RETURN_KEY, settings.OAUTH2_RETURN_URL)
+        return request.session.get(settings.GUILDMASTER_SESSION_RETURN_KEY, settings.GUILDMASTER_RETURN_URL)

@@ -3,8 +3,8 @@ import secrets
 import pytest
 import requests
 
-from oauth2 import exceptions, models
-from oauth2.workflows import AuthorizationCodeWorkflow
+from guildmaster import exceptions, models
+from guildmaster.workflows import AuthorizationCodeWorkflow
 
 
 def test_get_authorization_url(tf_client, rf, settings):
@@ -15,24 +15,24 @@ def test_get_authorization_url(tf_client, rf, settings):
     assert url.startswith(driver.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
-    assert f"state={request.session[settings.OAUTH2_SESSION_STATE_KEY]}" in url
-    assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == settings.OAUTH2_RETURN_URL
+    assert f"state={request.session[settings.GUILDMASTER_SESSION_STATE_KEY]}" in url
+    assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == settings.GUILDMASTER_RETURN_URL
 
     url = flow.get_authorization_url(request, return_url='/foo')
     assert url.startswith(driver.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
-    assert f"state={request.session[settings.OAUTH2_SESSION_STATE_KEY]}" in url
-    assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/foo'
+    assert f"state={request.session[settings.GUILDMASTER_SESSION_STATE_KEY]}" in url
+    assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == '/foo'
 
 
 def test_authorization_response_state(rf, tf_client, settings):
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = data['state']
     flow.validate_state(request)
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = secrets.token_hex(16)
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = secrets.token_hex(16)
     with pytest.raises(ValueError):
         flow.validate_state(request)
 
@@ -46,7 +46,7 @@ def test_authorization_response_error(rf, tf_client, settings):
     }
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', data=data)
-    request.session[settings.OAUTH2_SESSION_STATE_KEY] = data['state']
+    request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = data['state']
     with pytest.raises(exceptions.OAuth2Error) as exc:
         flow.validate_authorization_response(request)
     assert str(exc.value) == (

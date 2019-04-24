@@ -10,7 +10,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import RequestFactory
 from django.utils import timezone
 
-from oauth2 import drivers, models
+from guildmaster import drivers, models
 
 
 @pytest.fixture(scope='session', params=drivers.ClientDriver.get_drivers())

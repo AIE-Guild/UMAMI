@@ -9,7 +9,7 @@ urlpatterns = [
     path('', views.HomePageView.as_view(), name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('auth/', include('oauth2.urls')),
+    path('auth/', include('guildmaster.urls')),
     path('markdownx/', include('markdownx.urls')),
 ]
 

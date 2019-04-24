@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('expires_in', models.PositiveIntegerField(blank=True, null=True, verbose_name='expires in')),
                 ('scope', models.TextField(blank=True, default='', verbose_name='scope')),
                 ('redirect_uri', models.URLField(blank=True, default='', verbose_name='redirect URI')),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='oauth2.Client', verbose_name='client')),
+                ('client', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='guildmaster.Client', verbose_name='client')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='users')),
             ],
         ),

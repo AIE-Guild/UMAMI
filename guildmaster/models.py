@@ -11,8 +11,8 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from oauth2 import drivers, exceptions, utils
-from oauth2.core import TokenData
+from guildmaster import drivers, exceptions, utils
+from guildmaster.core import TokenData
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -33,7 +33,7 @@ class Client(models.Model):
     @property
     def callback(self) -> Optional[str]:
         try:
-            return reverse('oauth2:token', kwargs={'client_name': self.name})
+            return reverse('guildmaster:token', kwargs={'client_name': self.name})
         except NoReverseMatch:
             return None
 

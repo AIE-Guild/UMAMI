@@ -4,7 +4,7 @@ import secrets
 import pytest
 from django.utils import timezone
 
-from oauth2 import exceptions, models
+from guildmaster import exceptions, models
 
 
 def test_name(tf_client):

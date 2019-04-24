@@ -2,8 +2,8 @@ import requests
 from requests.auth import AuthBase
 from requests.status_codes import codes
 
-from oauth2.exceptions import AuthorizationRequiredError
-from oauth2.models import Token
+from guildmaster.exceptions import AuthorizationRequiredError
+from guildmaster.models import Token
 
 
 class TokenAuth(AuthBase):

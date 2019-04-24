@@ -7,8 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views.generic import base
 
-from oauth2 import exceptions, models
-from oauth2.workflows import AuthorizationCodeWorkflow
+from guildmaster import exceptions, models
+from guildmaster.workflows import AuthorizationCodeWorkflow
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -24,7 +24,7 @@ class AuthorizationView(LoginRequiredMixin, base.View):
             flow = AuthorizationCodeWorkflow(client_name)
         except ValueError as exc:
             return http.HttpResponseServerError(exc)
-        return_url = request.GET.get(settings.OAUTH2_RETURN_FIELD_NAME)
+        return_url = request.GET.get(settings.GUILDMASTER_RETURN_FIELD_NAME)
         url = flow.get_authorization_url(request, return_url)
         logger.info('Redirecting to: %s', url)
         return http.HttpResponseRedirect(url)
@@ -69,7 +69,7 @@ class ClientDumpView(LoginRequiredMixin, base.TemplateView):
         context['clients'] = {}
         for client in models.Client.objects.filter(enabled=True):
             url = '{}?next={}'.format(
-                reverse('oauth2:authorization', kwargs={'client_name': client.name}), reverse('oauth2:dump')
+                reverse('guildmaster:authorization', kwargs={'client_name': client.name}), reverse('guildmaster:dump')
             )
             try:
                 resource = resources.get(client=client)

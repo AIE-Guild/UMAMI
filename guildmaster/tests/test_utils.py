@@ -1,4 +1,4 @@
-from oauth2 import utils
+from guildmaster import utils
 
 
 def test_parse_http_date(tf_datestr, tf_date):
