@@ -7,6 +7,11 @@ from django.utils import timezone
 from guildmaster import exceptions, models
 
 
+@pytest.fixture(params=[models.DiscordAccount])
+def tf_account(request):
+    return request.param
+
+
 def test_name(tf_client):
     assert tf_client.name == 'test_client'
 
@@ -88,3 +93,52 @@ def test_refresh_token_not_supported(tf_client, tf_token, tf_datestr):
     with pytest.raises(exceptions.TokenRefreshError) as exc:
         tf_token.refresh()
     assert 'No authorization client found.' in str(exc.value)
+
+
+def test_account_model(tf_account):
+    assert issubclass(tf_account, models.Account)
+
+
+def test_account_model_conflict():
+    from guildmaster.models.accounts import Service
+
+    class FooAccount(models.Account):
+        service = Service(
+            name='foo',
+            description='Foo',
+            authorization_url='https://example.com/api/oauth2/authorize',
+            token_url='https://example.com/api/oauth2/token',
+            scopes=('foo',),
+        )
+
+    with pytest.raises(AttributeError):
+
+        class BarAccount(models.Account):
+            service = Service(
+                name='foo',
+                description='Bar',
+                authorization_url='https://example.com/api/oauth2/authorize',
+                token_url='https://example.com/api/oauth2/token',
+                scopes=('foo',),
+            )
+
+
+def test_account_service_registry(tf_account):
+    assert tf_account in models.Account.services
+
+
+def test_account_service_choices(tf_account):
+    assert [x for x in models.Account.get_service_choices() if x[0] == tf_account.service.name]
+
+
+def test_discord_account():
+    acct = models.DiscordAccount(
+        id='80351110224678912',
+        username='Nelly',
+        discriminator='1337',
+        email='nelly@discordapp.com',
+        verified=True,
+        mfa_enabled=True,
+        avatar='8342729096ea3675442027381ff50dfe',
+    )
+    assert str(acct) == 'Nelly#1337'

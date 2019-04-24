@@ -16,20 +16,26 @@ def user():
 
 
 def test_authorization(rf, user, tf_client):
-    request = rf.get(reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(
+        reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username
+    )
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 302
     assert response.url.startswith(tf_client.driver.authorization_url)
 
 
 def test_authorization_state(rf, user, tf_client, settings):
-    request = rf.get(reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(
+        reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username
+    )
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert request.session[settings.GUILDMASTER_SESSION_STATE_KEY] in response.url
 
 
 def test_authorization_return_url(rf, user, tf_client, settings):
-    request = rf.get(reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username)
+    request = rf.get(
+        reverse('guildmaster:authorization', kwargs={'client_name': tf_client.name}), username=user.username
+    )
     views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == settings.GUILDMASTER_RETURN_URL
 
