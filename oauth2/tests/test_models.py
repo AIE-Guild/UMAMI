@@ -27,16 +27,11 @@ def test_scope_override(tf_client):
     assert tf_client.scopes == ('foo', 'bar', 'baz')
 
 
-def test_create_resource(tf_user, tf_client):
-    resource = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
-    resource.users.add(tf_user)
-    assert isinstance(resource, models.Resource)
-
-
-def test_create_token(tf_user, tf_client, tf_resource):
+def test_create_token(tf_user, tf_client):
     # pylint: disable=duplicate-code
     token = models.Token.objects.create(
-        resource=tf_resource,
+        client=tf_client,
+        user=tf_user,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),
@@ -46,7 +41,6 @@ def test_create_token(tf_user, tf_client, tf_resource):
         redirect_uri='https://test.aie-guild.org/auth/token',
     )
     assert isinstance(token, models.Token)
-    assert token.client == tf_resource.client
 
 
 def test_token_not_state(tf_token):

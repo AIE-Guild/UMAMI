@@ -123,16 +123,10 @@ def tf_client(request):
 
 
 @pytest.fixture()
-def tf_resource(tf_user, tf_client):
-    obj = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
-    obj.users.add(tf_user)
-    return obj
-
-
-@pytest.fixture()
-def tf_token(tf_user, tf_client, tf_resource):
+def tf_token(tf_user, tf_client):
     obj = models.Token.objects.create(
-        resource=tf_resource,
+        client=tf_client,
+        user=tf_user,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),

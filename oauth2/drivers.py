@@ -65,19 +65,6 @@ class ClientDriver(metaclass=abc.ABCMeta):
     def scopes(self) -> tuple:
         """Default OAuth2 scopes."""
 
-    @property
-    @abc.abstractmethod
-    def resource_url(self) -> str:
-        """API resource info endpoint."""
-
-    @abc.abstractmethod
-    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('id')
-
-    @abc.abstractmethod
-    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('battletag')
-
 
 class DiscordDriver(ClientDriver):
     """
@@ -92,16 +79,6 @@ class DiscordDriver(ClientDriver):
     verification_url = None
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
     scopes = ('identify', 'email')
-    resource_url = 'https://discordapp.com/api/v6/users/@me'
-
-    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('id')
-
-    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
-        try:
-            return f"{data['username']}#{data['discriminator']}"
-        except KeyError:
-            return None
 
 
 class BattleNetDriver(ClientDriver):
@@ -117,13 +94,6 @@ class BattleNetDriver(ClientDriver):
     verification_url = 'https://us.battle.net/oauth/check_token'
     revocation_url = None
     scopes = ('wow.profile', 'sc2.profile')
-    resource_url = 'https://us.battle.net/oauth/userinfo'
-
-    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('id')
-
-    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('battletag')
 
 
 class EVEOnlineDriver(ClientDriver):
@@ -139,10 +109,3 @@ class EVEOnlineDriver(ClientDriver):
     verification_url = 'https://us.battle.net/oauth/check_token'
     revocation_url = 'https://login.eveonline.com/oauth/revoke'
     scopes = ('wow.profile', 'sc2.profile')
-    resource_url = 'https://esi.evetech.net/verify/'
-
-    def get_resource_key(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('CharacterID')
-
-    def get_resource_tag(self, data: Mapping[str, str]) -> Optional[str]:
-        return data.get('CharacterName')

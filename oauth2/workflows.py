@@ -9,7 +9,7 @@ from django.conf import settings
 
 from oauth2 import exceptions
 from oauth2.core import TokenData
-from oauth2.models import Client, Resource, Token
+from oauth2.models import Client, Token
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -62,18 +62,16 @@ class AuthorizationCodeWorkflow:
 
     def get_access_token(self, request: http.HttpRequest) -> Token:
         token_data = self._fetch_access_token(request)
-        resource = self._fetch_resource_info(request, token_data)
         token, __ = Token.objects.update_or_create(
-            resource=resource,
+            client=self.client,
+            user=request.user,
             defaults={
                 k: getattr(token_data, k)
                 for k in ['timestamp', 'access_token', 'token_type', 'refresh_token', 'scope', 'redirect_uri']
                 if getattr(token_data, k) is not None
             },
         )
-        logger.info(
-            "%s token %s obtained for user %s, resource %s", self.client.description, token, request.user, resource
-        )
+        logger.info("%s token %s obtained for user %s", self.client.description, token, request.user)
         return token
 
     def _fetch_access_token(self, request: http.HttpRequest) -> TokenData:
@@ -99,23 +97,6 @@ class AuthorizationCodeWorkflow:
         token = TokenData.from_response(response)
         token.redirect_uri = payload['redirect_uri']
         return token
-
-    def _fetch_resource_info(self, request: http.HttpRequest, token: TokenData) -> Resource:
-        logger.debug("sending resource request to %s", self.client.resource_url)
-        try:
-            response = self.session.get(self.client.resource_url, headers={'Authorization': token.authorization})
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error("failed to fetch resource details: %s", exc)
-            raise IOError(f"Failed to fetch resource details from {self.client.service}.")
-        resource_info = response.json()
-        resource, __ = Resource.objects.get_or_create(
-            client=self.client,
-            key=self.client.get_resource_key(resource_info),
-            tag=self.client.get_resource_tag(resource_info),
-        )
-        resource.users.add(request.user)
-        return resource
 
     @classmethod
     def validate_state(cls, request: http.HttpRequest) -> None:

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from oauth2.models import Client, Resource, Token
+from oauth2.models import Client, Token
 
 
 @admin.register(Client)
@@ -14,25 +14,14 @@ class ClientAdmin(admin.ModelAdmin):
     save_on_top = True
 
 
-@admin.register(Resource)
-class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'key', 'tag')
-    list_display_links = ('id',)
-    fields = ('id', 'client', ('key', 'tag'), 'users')
-    readonly_fields = ('id', 'client', 'key', 'tag', 'users')
-    list_filter = ('client',)
-    search_fields = ('client', 'users')
-    save_on_top = True
-
-
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'resource', 'token_type', 'scope', 'timestamp')
+    list_display = ('id', 'client', 'user', 'token_type', 'scope', 'timestamp')
     list_display_links = ('id',)
     fields = (
         'id',
         'client',
-        'resource',
+        'user',
         'token_type',
         'scope',
         'access_token',
@@ -45,7 +34,7 @@ class TokenAdmin(admin.ModelAdmin):
     readonly_fields = (
         'id',
         'client',
-        'resource',
+        'user',
         'token_type',
         'scope',
         'access_token',
@@ -55,7 +44,7 @@ class TokenAdmin(admin.ModelAdmin):
         'expiry',
         'redirect_uri',
     )
-    search_fields = ('client', 'resource__users')
+    search_fields = ('client', 'user')
     save_on_top = True
 
     def has_add_permission(self, request, obj=None):

@@ -57,9 +57,8 @@ def test_authorization_response_error(rf, tf_client, settings):
     assert exc.value.uri == data['error_uri']
 
 
-def test_fetch_token(rf, tf_client, requests_mock, tf_token_response, tf_resource_response, tf_datestr, tf_user):
+def test_fetch_token(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, json=tf_token_response, headers={'Date': tf_datestr})
-    requests_mock.get(tf_client.driver.resource_url, json=tf_resource_response)
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
@@ -91,16 +90,6 @@ def test_fetch_token_auth_error(rf, tf_client, requests_mock, tf_token_response,
 
 def test_fetch_token_auth_failure(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
     requests_mock.post(tf_client.driver.token_url, exc=requests.ConnectionError())
-    data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
-    flow = AuthorizationCodeWorkflow(tf_client.name)
-    request = rf.get('/auth/token', username=tf_user, data=data)
-    with pytest.raises(IOError):
-        flow.get_access_token(request)
-
-
-def test_fetch_token_resource_failure(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
-    requests_mock.post(tf_client.driver.token_url, json=tf_token_response, headers={'Date': tf_datestr})
-    requests_mock.get(tf_client.driver.resource_url, exc=requests.ConnectionError())
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)

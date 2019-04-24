@@ -44,7 +44,7 @@ def test_authorization_return_url(rf, user, tf_client, settings):
     assert request.session[settings.OAUTH2_SESSION_RETURN_KEY] == '/other'
 
 
-def test_token(rf, settings, user, tf_client, tf_resource_response, requests_mock):
+def test_token(rf, settings, user, tf_client, requests_mock):
     expected = {
         'access_token': secrets.token_urlsafe(64),
         'refresh_token': secrets.token_urlsafe(64),
@@ -54,7 +54,6 @@ def test_token(rf, settings, user, tf_client, tf_resource_response, requests_moc
     requests_mock.post(
         tf_client.driver.token_url, json=expected, headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')}
     )
-    requests_mock.get(tf_client.driver.resource_url, json=tf_resource_response)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
     request = rf.get(
@@ -67,11 +66,9 @@ def test_token(rf, settings, user, tf_client, tf_resource_response, requests_moc
     response = views.TokenView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 302
     assert requests_mock.called
-    assert requests_mock.call_count == 2
+    assert requests_mock.call_count == 1
     assert requests_mock.request_history[0].method == 'POST'
     assert requests_mock.request_history[0].url == tf_client.driver.token_url
-    assert requests_mock.request_history[1].method == 'GET'
-    assert requests_mock.request_history[1].url == tf_client.driver.resource_url
 
 
 def test_token_error(rf, settings, user, tf_client):

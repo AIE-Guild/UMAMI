@@ -32,7 +32,7 @@ class TokenAuth(AuthBase):
         """
         if response.status_code in (codes.UNAUTHORIZED, codes.FORBIDDEN):
             raise AuthorizationRequiredError(
-                f"{self.token.client} authorization token failed for {self.token.resource}"
+                f"{self.token.client} authorization token failed for user {self.token.user}"
             )
         return response
 
