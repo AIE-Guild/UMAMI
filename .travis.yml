@@ -24,7 +24,7 @@ install:
 script:
   - pytest --cov
 
-after_success: coveralls
+after_success: codecov
 
 notifications:
     email:
