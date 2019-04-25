@@ -1,7 +1,7 @@
 import datetime as dt
 import logging
 import uuid
-from typing import Dict, Optional
+from typing import Optional
 
 import requests
 from django import http
@@ -11,17 +11,29 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from guildmaster import drivers, exceptions, utils
+from guildmaster import exceptions, utils
 from guildmaster.core import TokenData
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+PROVIDERS = {
+    'discord': {
+        'description': 'Discord',
+        'authorization_url': 'https://discordapp.com/api/oauth2/authorize',
+        'token_url': 'https://discordapp.com/api/oauth2/token',
+        'revocation_url': 'https://discordapp.com/api/oauth2/token/revoke',
+        'scopes': ('identify', 'email'),
+    }
+}
+
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
-    service = models.CharField(verbose_name=_('service'), max_length=64, choices=drivers.ClientDriver.get_choices())
+    service = models.CharField(
+        verbose_name=_('service'), max_length=64, choices=[(k, PROVIDERS[k]['description']) for k in PROVIDERS]
+    )
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
@@ -29,6 +41,24 @@ class Client(models.Model):
 
     def __str__(self):
         return self.name
+
+    def __getattr__(self, item):
+        defaults = {
+            'description': None,
+            'authorization_url': None,
+            'token_url': None,
+            'verification_url': None,
+            'revocation_url': None,
+            'scopes': (),
+            'http_basic_auth': False,
+        }
+        if item in defaults:
+            return PROVIDERS[self.service].get(item, defaults[item])
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
+
+    @classmethod
+    def get_providers(cls):
+        return [x for x in PROVIDERS]
 
     @property
     def callback(self) -> Optional[str]:
@@ -40,50 +70,12 @@ class Client(models.Model):
     def redirect_url(self, request: http.HttpRequest) -> Optional[str]:
         return utils.exposed_url(request, path=self.callback)
 
-    def get_resource_key(self, data: Dict) -> Optional[str]:
-        return self.driver.get_resource_key(data)
-
-    def get_resource_tag(self, data: Dict) -> Optional[str]:
-        return self.driver.get_resource_tag(data)
-
-    @property
-    def driver(self) -> drivers.ClientDriver:
-        return drivers.ClientDriver.factory(self.service)
-
-    @property
-    def http_basic_auth(self) -> bool:
-        return self.driver.http_basic_auth
-
     @property
     def scopes(self) -> Optional[tuple]:
         if self.scope_override:
             return tuple(self.scope_override.split())
         else:
-            return self.driver.scopes
-
-    @property
-    def description(self):
-        return self.driver.description
-
-    @property
-    def authorization_url(self) -> str:
-        return self.driver.authorization_url
-
-    @property
-    def token_url(self) -> str:
-        return self.driver.token_url
-
-    @property
-    def verification_url(self) -> str:
-        return self.driver.verification_url
-
-    @property
-    def revocation_url(self) -> str:
-        return self.driver.revocation_url
-
-    @property
-    def resource_url(self) -> str:
-        return self.driver.resource_url
+            return self.default_scopes
 
 
 class Token(models.Model):

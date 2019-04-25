@@ -10,12 +10,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import RequestFactory
 from django.utils import timezone
 
-from guildmaster import drivers, models
-
-
-@pytest.fixture(scope='session', params=drivers.ClientDriver.get_drivers())
-def service(request):
-    return request.param
+from guildmaster import models
 
 
 @pytest.fixture()
@@ -112,11 +107,21 @@ def tf_user():
     return user
 
 
-@pytest.fixture(params=drivers.ClientDriver.get_driver_names())
-def tf_client(request):
+@pytest.fixture(params=[models.DiscordAccount])
+def tf_account(request):
+    return request.param
+
+
+@pytest.fixture(params=models.Client.get_providers())
+def tf_provider(request):
+    return request.param
+
+
+@pytest.fixture()
+def tf_client(tf_provider):
     return models.Client.objects.create(
-        service=request.param,
         name='test_client',
+        service=tf_provider,
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16),
     )

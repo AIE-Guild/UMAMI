@@ -9,17 +9,16 @@ from guildmaster.workflows import AuthorizationCodeWorkflow
 
 def test_get_authorization_url(tf_client, rf, settings):
     flow = AuthorizationCodeWorkflow(tf_client.name)
-    driver = tf_client.driver
     request = rf.get('/')
     url = flow.get_authorization_url(request)
-    assert url.startswith(driver.authorization_url)
+    assert url.startswith(tf_client.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
     assert f"state={request.session[settings.GUILDMASTER_SESSION_STATE_KEY]}" in url
     assert request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] == settings.GUILDMASTER_RETURN_URL
 
     url = flow.get_authorization_url(request, return_url='/foo')
-    assert url.startswith(driver.authorization_url)
+    assert url.startswith(tf_client.authorization_url)
     assert 'response_type=code' in url
     assert f'client_id={tf_client.client_id}' in url
     assert f"state={request.session[settings.GUILDMASTER_SESSION_STATE_KEY]}" in url
@@ -58,7 +57,7 @@ def test_authorization_response_error(rf, tf_client, settings):
 
 
 def test_fetch_token(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
-    requests_mock.post(tf_client.driver.token_url, json=tf_token_response, headers={'Date': tf_datestr})
+    requests_mock.post(tf_client.token_url, json=tf_token_response, headers={'Date': tf_datestr})
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
@@ -74,7 +73,7 @@ def test_fetch_token_auth_error(rf, tf_client, requests_mock, tf_token_response,
         'error_uri': 'https://tools.ietf.org/html/rfc6749#section-4.1.2',
         'state': secrets.token_urlsafe(16),
     }
-    requests_mock.post(tf_client.driver.token_url, json=error)
+    requests_mock.post(tf_client.token_url, json=error)
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)
@@ -89,7 +88,7 @@ def test_fetch_token_auth_error(rf, tf_client, requests_mock, tf_token_response,
 
 
 def test_fetch_token_auth_failure(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
-    requests_mock.post(tf_client.driver.token_url, exc=requests.ConnectionError())
+    requests_mock.post(tf_client.token_url, exc=requests.ConnectionError())
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     flow = AuthorizationCodeWorkflow(tf_client.name)
     request = rf.get('/auth/token', username=tf_user, data=data)

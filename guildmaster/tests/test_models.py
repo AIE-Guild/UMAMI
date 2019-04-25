@@ -7,23 +7,11 @@ from django.utils import timezone
 from guildmaster import exceptions, models
 
 
-@pytest.fixture(params=[models.DiscordAccount])
-def tf_account(request):
-    return request.param
+
 
 
 def test_name(tf_client):
     assert tf_client.name == 'test_client'
-
-
-def test_driver(tf_client):
-    driver = tf_client.driver
-    assert tf_client.service == driver.name
-
-
-def test_scopes(tf_client):
-    driver = tf_client.driver
-    assert tf_client.scopes == driver.scopes
 
 
 def test_scope_override(tf_client):

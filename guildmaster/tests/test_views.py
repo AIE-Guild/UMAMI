@@ -21,7 +21,7 @@ def test_authorization(rf, user, tf_client):
     )
     response = views.AuthorizationView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 302
-    assert response.url.startswith(tf_client.driver.authorization_url)
+    assert response.url.startswith(tf_client.authorization_url)
 
 
 def test_authorization_state(rf, user, tf_client, settings):
@@ -58,7 +58,7 @@ def test_token(rf, settings, user, tf_client, requests_mock):
         'expires_in': 3600,
     }
     requests_mock.post(
-        tf_client.driver.token_url, json=expected, headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')}
+        tf_client.token_url, json=expected, headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')}
     )
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)
@@ -74,7 +74,7 @@ def test_token(rf, settings, user, tf_client, requests_mock):
     assert requests_mock.called
     assert requests_mock.call_count == 1
     assert requests_mock.request_history[0].method == 'POST'
-    assert requests_mock.request_history[0].url == tf_client.driver.token_url
+    assert requests_mock.request_history[0].url == tf_client.token_url
 
 
 def test_token_error(rf, settings, user, tf_client):
