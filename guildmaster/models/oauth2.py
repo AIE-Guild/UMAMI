@@ -23,7 +23,7 @@ PROVIDERS = {
         'authorization_url': 'https://discordapp.com/api/oauth2/authorize',
         'token_url': 'https://discordapp.com/api/oauth2/token',
         'revocation_url': 'https://discordapp.com/api/oauth2/token/revoke',
-        'scopes': ('identify', 'email'),
+        'default_scopes': ('identify', 'email'),
     }
 }
 
@@ -49,7 +49,7 @@ class Client(models.Model):
             'token_url': None,
             'verification_url': None,
             'revocation_url': None,
-            'scopes': (),
+            'default_scopes': (),
             'http_basic_auth': False,
         }
         if item in defaults:
