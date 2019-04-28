@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.views.generic import base
 
 from guildmaster import exceptions, models
-from guildmaster.workflows import AuthorizationCodeWorkflow
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -37,13 +36,13 @@ class TokenView(LoginRequiredMixin, base.View):
         # pylint: disable=no-self-use
         client_name = kwargs.get('client_name')
         try:
-            flow = AuthorizationCodeWorkflow(client_name)
-        except ValueError as exc:
-            return http.HttpResponseServerError(exc)
+            client = models.Client.objects.get(name=client_name)
+        except models.Client.DoesNotExist:
+            return http.HttpResponseServerError(f"Invalid client: {client_name}")
 
         try:
-            flow.validate_state(request)
-            flow.validate_authorization_response(request)
+            client.validate_state(request)
+            client.validate_authorization_response(request)
         except ValueError as exc:
             logger.error(exc)
             return http.HttpResponseForbidden(exc)
@@ -52,11 +51,11 @@ class TokenView(LoginRequiredMixin, base.View):
             return http.HttpResponseForbidden(exc)
 
         try:
-            flow.get_access_token(request)
+            client.get_access_token(request)
         except IOError as exc:
             return http.HttpResponse(exc, status=503)
-        messages.success(request, f'Authorization obtained from {flow.verbose_name}')
-        return_url = flow.get_return_url(request)
+        messages.success(request, f'Authorization obtained from {client}')
+        return_url = client.get_return_url(request)
         return http.HttpResponseRedirect(return_url)
 
 

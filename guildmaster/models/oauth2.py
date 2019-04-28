@@ -1,8 +1,8 @@
 import datetime as dt
 import logging
+import secrets
 import uuid
 from typing import Optional
-import secrets
 from urllib import parse
 
 import requests
@@ -40,6 +40,8 @@ class Client(models.Model):
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
     scope_override = models.TextField(verbose_name=_('scope override'), blank=True, default='')
+
+    session = requests.Session()
 
     def __str__(self):
         return self.name
@@ -108,6 +110,66 @@ class Client(models.Model):
         request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] = return_url
         logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
         return result
+
+    def get_access_token(self, request: http.HttpRequest) -> 'Token':
+        token_data = self._fetch_token_data(request)
+        token, __ = Token.objects.update_or_create(
+            client=self,
+            user=request.user,
+            defaults={
+                k: getattr(token_data, k)
+                for k in ['timestamp', 'access_token', 'token_type', 'refresh_token', 'scope', 'redirect_uri']
+                if getattr(token_data, k) is not None
+            },
+        )
+        logger.info("%s token %s obtained for user %s", self.description, token, request.user)
+        return token
+
+    def _fetch_token_data(self, request: http.HttpRequest) -> TokenData:
+        auth = None
+        payload = {
+            'grant_type': 'authorization_code',
+            'code': request.GET['code'],
+            'redirect_uri': self.redirect_url(request),
+            'scope': ' '.join(self.scopes),
+        }
+        if self.http_basic_auth:
+            auth = (self.client_id, self.client_secret)
+        else:
+            payload.update({'client_id': self.client_id, 'client_secret': self.client_secret})
+
+        logger.debug("sending token request to %s", self.token_url)
+        try:
+            response = self.session.post(self.token_url, data=payload, auth=auth)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error("failed to fetch access token: %s", exc)
+            raise IOError(f"Failed to fetch access token from {self.service}.")
+        token = TokenData.from_response(response)
+        token.redirect_uri = payload['redirect_uri']
+        return token
+
+    @classmethod
+    def validate_state(cls, request: http.HttpRequest) -> None:
+        state = request.session.get(settings.GUILDMASTER_SESSION_STATE_KEY)
+        logger.debug("fetched session state for user %s: state=%s", request.user, state)
+        if request.GET['state'] != state:
+            logger.error("state mismatch: %s received, %s expected.", request.GET['state'], state)
+            raise ValueError("Authorization state mismatch.")
+
+    @classmethod
+    def validate_authorization_response(cls, request: http.HttpRequest) -> None:
+        if 'error' in request.GET:
+            exc = exceptions.OAuth2Error(
+                error=request.GET['error'],
+                description=request.GET.get('error_description'),
+                uri=request.GET.get('error_uri'),
+            )
+            logger.error("Authorization request error: %s", exc)
+            raise exc
+
+    def get_return_url(cls, request: http.HttpRequest) -> str:
+        return request.session.get(settings.GUILDMASTER_SESSION_RETURN_KEY, settings.GUILDMASTER_RETURN_URL)
 
 
 class Token(models.Model):

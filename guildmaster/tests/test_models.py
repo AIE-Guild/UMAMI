@@ -7,9 +7,6 @@ from django.utils import timezone
 from guildmaster import exceptions, models
 
 
-
-
-
 def test_name(tf_client):
     assert tf_client.name == 'test_client'
 
