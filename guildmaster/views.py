@@ -21,11 +21,11 @@ class AuthorizationView(LoginRequiredMixin, base.View):
         # pylint: disable=no-self-use
         client_name = kwargs.get('client_name')
         try:
-            flow = AuthorizationCodeWorkflow(client_name)
-        except ValueError as exc:
-            return http.HttpResponseServerError(exc)
+            client = models.Client.objects.get(name=client_name)
+        except models.Client.DoesNotExist:
+            return http.HttpResponseServerError(f"Invalid client: {client_name}")
         return_url = request.GET.get(settings.GUILDMASTER_RETURN_FIELD_NAME)
-        url = flow.get_authorization_url(request, return_url)
+        url = client.get_authorization_url(request, return_url)
         logger.info('Redirecting to: %s', url)
         return http.HttpResponseRedirect(url)
 

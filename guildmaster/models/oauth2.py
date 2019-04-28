@@ -2,6 +2,8 @@ import datetime as dt
 import logging
 import uuid
 from typing import Optional
+import secrets
+from urllib import parse
 
 import requests
 from django import http
@@ -76,6 +78,36 @@ class Client(models.Model):
             return tuple(self.scope_override.split())
         else:
             return self.default_scopes
+
+    def get_authorization_url(self, request: http.HttpRequest, return_url: Optional[str] = None) -> str:
+        """Build the OAuth2 authorization redirect URL.
+
+        Args:
+            request: The received user request.
+            return_url: The URL to redirect to when the OAuth2 authorization code workflow is complete.
+
+        Returns:
+            The fully parametrized URL to redirect the user to for authorization.
+
+        """
+        target = parse.urlsplit(self.authorization_url)
+        state = secrets.token_urlsafe(settings.GUILDMASTER_STATE_BYTES)
+        if return_url is None:
+            return_url = settings.GUILDMASTER_RETURN_URL
+        args = {
+            'response_type': 'code',
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_url(request),
+            'scope': ' '.join(self.scopes),
+            'state': state,
+        }
+        target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
+        result = parse.urlunsplit(target)
+        logger.debug("built authorization URL: %s", result)
+        request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = state
+        request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] = return_url
+        logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
+        return result
 
 
 class Token(models.Model):

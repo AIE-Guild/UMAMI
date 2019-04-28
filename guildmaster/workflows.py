@@ -30,36 +30,6 @@ class AuthorizationCodeWorkflow:
     def verbose_name(self):
         return self.client.description
 
-    def get_authorization_url(self, request: http.HttpRequest, return_url: Optional[str] = None) -> str:
-        """Build the OAuth2 authorization redirect URL.
-
-        Args:
-            request: The received user request.
-            return_url: The URL to redirect to when the OAuth2 authorization code workflow is complete.
-
-        Returns:
-            The fully parametrized URL to redirect the user to for authorization.
-
-        """
-        target = parse.urlsplit(self.client.authorization_url)
-        state = secrets.token_urlsafe(settings.GUILDMASTER_STATE_BYTES)
-        if return_url is None:
-            return_url = settings.GUILDMASTER_RETURN_URL
-        args = {
-            'response_type': 'code',
-            'client_id': self.client.client_id,
-            'redirect_uri': self.client.redirect_url(request),
-            'scope': ' '.join(self.client.scopes),
-            'state': state,
-        }
-        target = target._replace(query=parse.urlencode(args, quote_via=parse.quote))
-        result = parse.urlunsplit(target)
-        logger.debug("built authorization URL: %s", result)
-        request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = state
-        request.session[settings.GUILDMASTER_SESSION_RETURN_KEY] = return_url
-        logger.debug("stored session state for user %s: state=%s, return_url=%s", request.user, state, return_url)
-        return result
-
     def get_access_token(self, request: http.HttpRequest) -> Token:
         token_data = self._fetch_access_token(request)
         token, __ = Token.objects.update_or_create(
