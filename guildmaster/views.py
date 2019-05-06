@@ -57,23 +57,3 @@ class TokenView(LoginRequiredMixin, base.View):
         messages.success(request, f'Authorization obtained from {client}')
         return_url = client.get_return_url(request)
         return http.HttpResponseRedirect(return_url)
-
-
-class ClientDumpView(LoginRequiredMixin, base.TemplateView):
-    template_name = 'client_dump.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        resources = models.Resource.objects.filter(users=self.request.user)
-        context['clients'] = {}
-        for client in models.Client.objects.filter(enabled=True):
-            url = '{}?next={}'.format(
-                reverse('guildmaster:authorization', kwargs={'client_name': client.name}), reverse('guildmaster:dump')
-            )
-            try:
-                resource = resources.get(client=client)
-            except models.Resource.DoesNotExist:
-                context['clients'][client.name] = {'url': url, 'resource': ''}
-            else:
-                context['clients'][client.name] = {'url': url, 'resource': str(resource)}
-        return context
