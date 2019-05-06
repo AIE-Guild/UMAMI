@@ -121,7 +121,7 @@ def tf_provider(request):
 def tf_client(tf_provider):
     return models.Client.objects.create(
         name='test_client',
-        service=tf_provider,
+        provider=tf_provider,
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16),
     )

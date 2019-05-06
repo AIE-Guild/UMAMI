@@ -33,8 +33,8 @@ PROVIDERS = {
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
-    service = models.CharField(
-        verbose_name=_('service'), max_length=64, choices=[(k, PROVIDERS[k]['description']) for k in PROVIDERS]
+    provider = models.CharField(
+        verbose_name=_('providers'), max_length=64, choices=[(k, PROVIDERS[k]['description']) for k in PROVIDERS]
     )
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
@@ -57,7 +57,7 @@ class Client(models.Model):
             'http_basic_auth': False,
         }
         if item in defaults:
-            return PROVIDERS[self.service].get(item, defaults[item])
+            return PROVIDERS[self.provider].get(item, defaults[item])
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
     @classmethod
@@ -144,7 +144,7 @@ class Client(models.Model):
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)
-            raise IOError(f"Failed to fetch access token from {self.service}.")
+            raise IOError(f"Failed to fetch access token from {self.provider}.")
         token = TokenData.from_response(response)
         token.redirect_uri = payload['redirect_uri']
         return token
@@ -228,7 +228,7 @@ class Token(models.Model):
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)
-            raise IOError(f"Failed to fetch access token from {self.client.service}.")
+            raise IOError(f"Failed to fetch access token from {self.client.provider}.")
         data = TokenData.from_response(response)
         self.timestamp = data.timestamp
         self.access_token = data.access_token

@@ -5,12 +5,12 @@ from guildmaster.models import Client, Token
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('service', 'name', 'enabled', 'client_id', 'callback')
+    list_display = ('provider', 'name', 'enabled', 'client_id', 'callback')
     list_display_links = ('name',)
     list_editable = ('enabled',)
-    fields = ('service', 'name', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
+    fields = ('provider', 'name', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
     readonly_fields = ('callback', 'scopes')
-    prepopulated_fields = {'name': ('service',)}
+    prepopulated_fields = {'name': ('provider',)}
     save_on_top = True
 
 
