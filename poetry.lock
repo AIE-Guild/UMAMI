@@ -392,7 +392,7 @@ dev = ["pre-commit", "tox"]
 category = "main"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
 name = "psycopg2-binary"
-optional = false
+optional = true
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 version = "2.8.3"
 
@@ -672,7 +672,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "212a8b5a1c42863a1d996fa311597dc97a35ea9a58a9a5d46f0d8b08bd837004"
+content-hash = "6beb5eacff52d75abadee3d9a873be40766d6a40e127132a25df9c60ce28b241"
 python-versions = "~3.7"
 
 [metadata.hashes]
