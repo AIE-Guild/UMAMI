@@ -15,27 +15,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from guildmaster import exceptions, utils
 from guildmaster.core import TokenData
+from guildmaster.models import providers
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-PROVIDERS = {
-    'discord': {
-        'description': 'Discord',
-        'authorization_url': 'https://discordapp.com/api/oauth2/authorize',
-        'token_url': 'https://discordapp.com/api/oauth2/token',
-        'revocation_url': 'https://discordapp.com/api/oauth2/token/revoke',
-        'default_scopes': ('identify', 'email'),
-    }
-}
 
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
-    provider = models.CharField(
-        verbose_name=_('providers'), max_length=64, choices=[(k, PROVIDERS[k]['description']) for k in PROVIDERS]
-    )
+    provider_id = models.CharField(verbose_name=_('providers'), max_length=64, choices=providers.Provider.choices())
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
@@ -46,23 +35,12 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-    def __getattr__(self, item):
-        defaults = {
-            'description': None,
-            'authorization_url': None,
-            'token_url': None,
-            'verification_url': None,
-            'revocation_url': None,
-            'default_scopes': (),
-            'http_basic_auth': False,
-        }
-        if item in defaults:
-            return PROVIDERS[self.provider].get(item, defaults[item])
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
+    def __getattr__(self, attr):
+        return getattr(self.provider, attr)
 
-    @classmethod
-    def get_providers(cls):
-        return [x for x in PROVIDERS]
+    @property
+    def provider(self):
+        return providers.Provider.registry[self.provider_id]
 
     @property
     def callback(self) -> Optional[str]:
@@ -79,7 +57,7 @@ class Client(models.Model):
         if self.scope_override:
             return tuple(self.scope_override.split())
         else:
-            return self.default_scopes
+            return self.provider.default_scopes
 
     def get_authorization_url(self, request: http.HttpRequest, return_url: Optional[str] = None) -> str:
         """Build the OAuth2 authorization redirect URL.
@@ -92,7 +70,7 @@ class Client(models.Model):
             The fully parametrized URL to redirect the user to for authorization.
 
         """
-        target = parse.urlsplit(self.authorization_url)
+        target = parse.urlsplit(self.provider.authorization_url)
         state = secrets.token_urlsafe(settings.GUILDMASTER_STATE_BYTES)
         if return_url is None:
             return_url = settings.GUILDMASTER_RETURN_URL
@@ -122,7 +100,7 @@ class Client(models.Model):
                 if getattr(token_data, k) is not None
             },
         )
-        logger.info("%s token %s obtained for user %s", self.description, token, request.user)
+        logger.info("%s token %s obtained for user %s", self.provider.description, token, request.user)
         return token
 
     def _fetch_token_data(self, request: http.HttpRequest) -> TokenData:
@@ -133,14 +111,14 @@ class Client(models.Model):
             'redirect_uri': self.redirect_url(request),
             'scope': ' '.join(self.scopes),
         }
-        if self.http_basic_auth:
+        if self.provider.http_basic_auth:
             auth = (self.client_id, self.client_secret)
         else:
             payload.update({'client_id': self.client_id, 'client_secret': self.client_secret})
 
-        logger.debug("sending token request to %s", self.token_url)
+        logger.debug("sending token request to %s", self.provider.token_url)
         try:
-            response = self.session.post(self.token_url, data=payload, auth=auth)
+            response = self.session.post(self.provider.token_url, data=payload, auth=auth)
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.error("failed to fetch access token: %s", exc)

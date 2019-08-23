@@ -84,38 +84,6 @@ def test_account_model(tf_account):
     assert issubclass(tf_account, models.Account)
 
 
-def test_account_model_conflict():
-    from guildmaster.models.accounts import Service
-
-    class FooAccount(models.Account):
-        service = Service(
-            name='foo',
-            description='Foo',
-            authorization_url='https://example.com/api/oauth2/authorize',
-            token_url='https://example.com/api/oauth2/token',
-            scopes=('foo',),
-        )
-
-    with pytest.raises(AttributeError):
-
-        class BarAccount(models.Account):
-            service = Service(
-                name='foo',
-                description='Bar',
-                authorization_url='https://example.com/api/oauth2/authorize',
-                token_url='https://example.com/api/oauth2/token',
-                scopes=('foo',),
-            )
-
-
-def test_account_service_registry(tf_account):
-    assert tf_account in models.Account.services
-
-
-def test_account_service_choices(tf_account):
-    assert [x for x in models.Account.get_service_choices() if x[0] == tf_account.service.name]
-
-
 def test_discord_account():
     acct = models.DiscordAccount(
         id='80351110224678912',

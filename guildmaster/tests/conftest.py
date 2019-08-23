@@ -112,16 +112,16 @@ def tf_account(request):
     return request.param
 
 
-@pytest.fixture(params=models.Client.get_providers())
+@pytest.fixture(params=[k for k in models.Provider.registry])
 def tf_provider(request):
-    return request.param
+    return models.Provider.registry[request.param]
 
 
 @pytest.fixture()
 def tf_client(tf_provider):
     return models.Client.objects.create(
         name='test_client',
-        provider=tf_provider,
+        provider_id=tf_provider.name,
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16),
     )
