@@ -16,7 +16,7 @@ cache:
     - $HOME/.cache/pip
 
 install:
-  - pip install poetry==1.0.0a2
+  - pip install poetry
   - poetry install
   - python manage.py migrate --noinput
   - python manage.py collectstatic --noinput
