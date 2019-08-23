@@ -4,7 +4,6 @@ from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
 from django.views.generic import base
 
 from guildmaster import exceptions, models

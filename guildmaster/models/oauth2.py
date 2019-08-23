@@ -24,7 +24,9 @@ logger.addHandler(logging.NullHandler())
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
-    provider_id = models.CharField(verbose_name=_('providers'), max_length=64, choices=providers.Provider.choices())
+    provider_id = models.CharField(
+        verbose_name=_('providers'), max_length=64, unique=True, choices=providers.Provider.choices()
+    )
     enabled = models.BooleanField(verbose_name=_('enabled'), default=True)
     client_id = models.CharField(verbose_name=_('client id'), max_length=191)
     client_secret = models.CharField(verbose_name=_('client secret'), max_length=191)
@@ -57,7 +59,10 @@ class Client(models.Model):
         if self.scope_override:
             return tuple(self.scope_override.split())
         else:
-            return self.provider.default_scopes
+            try:
+                return self.provider.default_scopes
+            except KeyError:
+                return None
 
     def get_authorization_url(self, request: http.HttpRequest, return_url: Optional[str] = None) -> str:
         """Build the OAuth2 authorization redirect URL.

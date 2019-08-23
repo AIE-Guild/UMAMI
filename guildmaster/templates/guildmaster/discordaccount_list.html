@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+    <h2>
+        Discord Accounts
+    </h2>
+
+    <div class="row">
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Discriminator</th>
+                    <th scope="col">E-Mail</th>
+                    <th scope="col">Verified</th>
+                    <th scope="col">MFA Enabled</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for account in object_list %}
+                    <tr>
+                        <td scope="row">{{ account.id }}</td>
+                        <td scope="row">{{ account.username }}</td>
+                        <td scope="row">{{ account.discriminator }}</td>
+                        <td scope="row">{{ account.email }}</td>
+                        <td scope="row">{{ account.verified }}</td>
+                        <td scope="row">{{ account.mfa_enabled }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock content %}

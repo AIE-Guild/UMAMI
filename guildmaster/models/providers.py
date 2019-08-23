@@ -6,8 +6,11 @@ class Provider(abc.ABC):
 
     registry = {}
 
+    @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        if cls.name in cls.registry:
+            raise AttributeError(f"{cls.name} already in use by {cls.registry[cls.name]}")
         cls.registry[cls.name] = cls
 
     def __str__(self):
@@ -21,6 +24,11 @@ class Provider(abc.ABC):
     @property
     @abc.abstractmethod
     def description(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def base_url(self):
         pass
 
     @property
@@ -59,8 +67,11 @@ class Provider(abc.ABC):
 
 
 class DiscordProvider(Provider):
+    """A provider for Discord, https://discordapp.com/ ."""
+
     name = 'discord'
     description = 'Discord'
+    base_url = 'https://discordapp.com/api'
     authorization_url = 'https://discordapp.com/api/oauth2/authorize'
     token_url = 'https://discordapp.com/api/oauth2/token'
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
