@@ -80,10 +80,6 @@ def test_refresh_token_not_supported(tf_client, tf_token, tf_datestr):
     assert 'No authorization client found.' in str(exc.value)
 
 
-def test_account_model(tf_account):
-    assert issubclass(tf_account, models.Account)
-
-
 def test_discord_account():
     acct = models.DiscordAccount(
         id='80351110224678912',
