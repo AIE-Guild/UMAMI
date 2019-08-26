@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
@@ -9,7 +8,7 @@ urlpatterns = [
     path('', views.HomePageView.as_view(), name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('auth/', include('oauth2.urls')),
+    path('ext/', include('guildmaster.urls')),
     path('markdownx/', include('markdownx.urls')),
 ]
 

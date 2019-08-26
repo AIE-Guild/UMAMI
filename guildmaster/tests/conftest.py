@@ -10,12 +10,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import RequestFactory
 from django.utils import timezone
 
-from oauth2 import drivers, models
-
-
-@pytest.fixture(scope='session', params=drivers.ClientDriver.get_drivers())
-def service(request):
-    return request.param
+from guildmaster import models
 
 
 @pytest.fixture()
@@ -112,27 +107,31 @@ def tf_user():
     return user
 
 
-@pytest.fixture(params=drivers.ClientDriver.get_driver_names())
-def tf_client(request):
+@pytest.fixture(params=[models.DiscordAccount])
+def tf_account(request):
+    return request.param
+
+
+@pytest.fixture(params=[k for k in models.Provider.registry])
+def tf_provider(request):
+    return models.Provider.registry[request.param]
+
+
+@pytest.fixture()
+def tf_client(tf_provider):
     return models.Client.objects.create(
-        service=request.param,
         name='test_client',
+        provider_id=tf_provider.name,
         client_id=secrets.token_hex(16),
         client_secret=secrets.token_urlsafe(16),
     )
 
 
 @pytest.fixture()
-def tf_resource(tf_user, tf_client):
-    obj = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
-    obj.users.add(tf_user)
-    return obj
-
-
-@pytest.fixture()
-def tf_token(tf_user, tf_client, tf_resource):
+def tf_token(tf_user, tf_client):
     obj = models.Token.objects.create(
-        resource=tf_resource,
+        client=tf_client,
+        user=tf_user,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),

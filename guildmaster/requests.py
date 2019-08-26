@@ -2,12 +2,11 @@ import requests
 from requests.auth import AuthBase
 from requests.status_codes import codes
 
-from oauth2.exceptions import AuthorizationRequiredError
-from oauth2.models import Token
+from guildmaster.exceptions import AuthorizationRequiredError
 
 
 class TokenAuth(AuthBase):
-    def __init__(self, token: Token) -> None:
+    def __init__(self, token: 'guildmaster.models.Token') -> None:
         """Authentication class to apply Oauth2 token.
 
         Args:
@@ -32,7 +31,7 @@ class TokenAuth(AuthBase):
         """
         if response.status_code in (codes.UNAUTHORIZED, codes.FORBIDDEN):
             raise AuthorizationRequiredError(
-                f"{self.token.client} authorization token failed for {self.token.resource}"
+                f"{self.token.client} authorization token failed for user {self.token.user}"
             )
         return response
 

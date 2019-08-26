@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+    <h2 class="mb-4">Discord Accounts</h2>
+
+    <div class="row mb-4">
+        <form action="{% url 'guildmaster:discord-sync' %}" target="_self">
+            <input type="submit" class="btn btn-primary" value="Synchronize Discord">
+        </form>
+    </div>
+
+    <div class="card-deck">
+        {% for account in object_list %}
+            <div class="card mb-4">
+                <div class="row no-gutters">
+                    <div class="col-md-3 align-items-center my-auto">
+                        <img src="https://cdn.discordapp.com/avatars/{{ account.id }}/{{ account.avatar }}.png"
+                             class="rounded mx-auto d-block" alt="Avatar">
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ account }}</h5>
+                            <p class="card-text">{{ account.email }}</p>
+                            <p class="card-text"><small class="text-muted">Updated: {{ account.updated }}</small></p>
+                            <a class="btn btn-outline-danger"
+                               href="{% url 'guildmaster:discord-delete' pk=account.id %}" role="button">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock content %}

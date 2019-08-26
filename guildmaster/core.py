@@ -1,11 +1,11 @@
 import datetime as dt
 import logging
+from dataclasses import dataclass, field
 
 import requests
 from django.utils import timezone
 
-from dataclasses import dataclass, field
-from oauth2 import exceptions, utils
+from guildmaster import exceptions, utils
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

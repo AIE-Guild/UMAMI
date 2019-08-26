@@ -4,21 +4,11 @@ import secrets
 import pytest
 from django.utils import timezone
 
-from oauth2 import exceptions, models
+from guildmaster import exceptions, models
 
 
 def test_name(tf_client):
     assert tf_client.name == 'test_client'
-
-
-def test_driver(tf_client):
-    driver = tf_client.driver
-    assert tf_client.service == driver.name
-
-
-def test_scopes(tf_client):
-    driver = tf_client.driver
-    assert tf_client.scopes == driver.scopes
 
 
 def test_scope_override(tf_client):
@@ -27,16 +17,11 @@ def test_scope_override(tf_client):
     assert tf_client.scopes == ('foo', 'bar', 'baz')
 
 
-def test_create_resource(tf_user, tf_client):
-    resource = models.Resource.objects.create(client=tf_client, key='12345', tag='Ralff')
-    resource.users.add(tf_user)
-    assert isinstance(resource, models.Resource)
-
-
-def test_create_token(tf_user, tf_client, tf_resource):
+def test_create_token(tf_user, tf_client):
     # pylint: disable=duplicate-code
     token = models.Token.objects.create(
-        resource=tf_resource,
+        client=tf_client,
+        user=tf_user,
         token_type='bearer',
         access_token=secrets.token_urlsafe(64),
         refresh_token=secrets.token_urlsafe(64),
@@ -46,7 +31,6 @@ def test_create_token(tf_user, tf_client, tf_resource):
         redirect_uri='https://test.aie-guild.org/auth/token',
     )
     assert isinstance(token, models.Token)
-    assert token.client == tf_resource.client
 
 
 def test_token_not_state(tf_token):
@@ -94,3 +78,16 @@ def test_refresh_token_not_supported(tf_client, tf_token, tf_datestr):
     with pytest.raises(exceptions.TokenRefreshError) as exc:
         tf_token.refresh()
     assert 'No authorization client found.' in str(exc.value)
+
+
+def test_discord_account():
+    acct = models.DiscordAccount(
+        id='80351110224678912',
+        username='Nelly',
+        discriminator='1337',
+        email='nelly@discordapp.com',
+        verified=True,
+        mfa_enabled=True,
+        avatar='8342729096ea3675442027381ff50dfe',
+    )
+    assert str(acct) == 'Nelly#1337'

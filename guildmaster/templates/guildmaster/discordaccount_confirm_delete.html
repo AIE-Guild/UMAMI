@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+    <h2 class="mb-4">Delete Discord Account</h2>
+
+    <p class="lead">Please confirm the deletion of the linked account.</p>
+
+    <div class="card mb-3">
+        <div class="row no-gutters">
+            <div class="col-md-3">
+                <img src="https://cdn.discordapp.com/avatars/{{ object.id }}/{{ object.avatar }}.png"
+                     class="img-thumbnail" alt="Avatar">
+            </div>
+            <div class="col-md-9">
+                <div class="card-body">
+                    <h5 class="card-title">{{ object }}</h5>
+                    <p class="card-text">{{ object.email }}</p>
+                    <form method="post" target="_self">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-danger" value="Delete">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
