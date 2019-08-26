@@ -1,7 +1,6 @@
 import datetime as dt
 import logging
 import secrets
-import uuid
 from typing import Optional
 from urllib import parse
 
@@ -22,7 +21,6 @@ logger.addHandler(logging.NullHandler())
 
 
 class Client(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(verbose_name=_('name'), unique=True, max_length=64)
     provider_id = models.CharField(
         verbose_name=_('providers'), max_length=64, unique=True, choices=providers.Provider.choices()
@@ -158,7 +156,6 @@ class Client(models.Model):
 class Token(models.Model):
     REFRESH_COEFFICIENT = 0.5
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey('Client', verbose_name=_('client'), on_delete=models.PROTECT)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('users'), on_delete=models.CASCADE)
     timestamp = models.DateTimeField(verbose_name=_('timestamp'), auto_now_add=True)

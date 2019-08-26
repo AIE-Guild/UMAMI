@@ -1,6 +1,7 @@
 from django.contrib import admin
+from concurrency.admin import ConcurrentModelAdmin
 
-from guildmaster.models import Client, Token
+from guildmaster.models import Client, Token, DiscordAccount
 
 
 @admin.register(Client)
@@ -50,3 +51,21 @@ class TokenAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         # pylint: disable=arguments-differ
         return False
+
+
+@admin.register(DiscordAccount)
+class DiscordAccountAdmin(ConcurrentModelAdmin):
+    list_display = ('__str__', 'id', 'email', 'verified', 'mfa_enabled')
+    list_display_links = ('__str__',)
+    list_filter = ('verified', 'mfa_enabled')
+    fieldsets = (
+        ('Local', {
+
+            'fields': ('users',)
+        }),
+        ('Remote', {
+            'fields': ('id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled')
+        }),
+    )
+    readonly_fields = ('id', 'username', 'discriminator', 'users', 'email', 'verified', 'mfa_enabled')
+    search_fields = ('username', 'discriminator', 'email', 'users__username', 'users__email')

@@ -1,4 +1,3 @@
-import requests
 from django import http
 from django.conf import settings
 from django.contrib import messages
@@ -12,7 +11,7 @@ from guildmaster.models import Client, DiscordAccount, DiscordProvider, Token
 from guildmaster.requests import TokenAuth
 
 
-class DiscordAccountAdd(LoginRequiredMixin, View):
+class DiscordAccountSync(LoginRequiredMixin, View):
     provider = DiscordProvider
 
     def get(self, request):
@@ -27,26 +26,24 @@ class DiscordAccountAdd(LoginRequiredMixin, View):
         except Token.DoesNotExist:
             auth_url = '{}?{}'.format(
                 reverse('guildmaster:authorization', kwargs={'client_name': self.provider.name}),
-                urlencode({settings.GUILDMASTER_RETURN_FIELD_NAME: reverse('guildmaster:discord-add')}),
+                urlencode({settings.GUILDMASTER_RETURN_FIELD_NAME: reverse('guildmaster:discord-sync')}),
             )
             return http.HttpResponseRedirect(auth_url)
 
         auth = TokenAuth(token)
         try:
-            response = requests.get(self.provider.base_url + '/users/@me', auth=auth)
-            response.raise_for_status()
-        except requests.RequestException as exc:
+            account = DiscordAccount.objects.synchronize(request.user, token)
+        except IOError as exc:
             messages.error(f"Unable to communicate with {self.provider.description}: {exc}")
             return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
-        data = response.json()
-        account = DiscordAccount.objects.create(
-            id=data['id'], username=data['username'], discriminator=data['discriminator']
-        )
-
-        messages.success(request, f"Added {self.provider.description} account: {account}")
+        messages.success(request, f"Synchronized {self.provider.description} account: {account}")
         return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
 
-class DiscordAccountList(ListView):
+class DiscordAccountList(LoginRequiredMixin, ListView):
     model = DiscordAccount
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(users=self.request.user)

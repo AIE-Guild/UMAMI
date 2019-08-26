@@ -3,11 +3,10 @@ from requests.auth import AuthBase
 from requests.status_codes import codes
 
 from guildmaster.exceptions import AuthorizationRequiredError
-from guildmaster.models import Token
 
 
 class TokenAuth(AuthBase):
-    def __init__(self, token: Token) -> None:
+    def __init__(self, token: 'guildmaster.models.Token') -> None:
         """Authentication class to apply Oauth2 token.
 
         Args:
