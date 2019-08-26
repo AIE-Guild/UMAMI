@@ -1,36 +1,7 @@
-import logging
-
 from concurrency import fields
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-import requests
-
-from guildmaster.requests import TokenAuth
-from guildmaster.models.providers import DiscordProvider
-
-logger = logging.getLogger(__name__)
-
-
-class DiscordAccountManager(models.Manager):
-    def synchronize(self, user, token):
-        auth = TokenAuth(token)
-        try:
-            response = requests.get(DiscordProvider.base_url + '/users/@me', auth=auth)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error("user query failed: %s", exc)
-            raise IOError(exc)
-
-        data = {
-            k: v
-            for k, v in response.json().items()
-            if k in ['id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled', 'avatar']
-        }
-        account, created = DiscordAccount.objects.update_or_create(id=data['id'], defaults=data)
-        account.users.add(user)
-
-        return account
 
 
 class DiscordAccount(models.Model):
@@ -47,8 +18,6 @@ class DiscordAccount(models.Model):
     avatar = models.CharField(verbose_name=_('avatar'), max_length=64, blank=True, default='')
     created = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True)
     updated = models.DateTimeField(verbose_name=_('updated at'), auto_now=True)
-
-    objects = DiscordAccountManager()
 
     class Meta:
         ordering = ('username', 'discriminator')

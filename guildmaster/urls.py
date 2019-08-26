@@ -8,4 +8,5 @@ urlpatterns = [
     path('token/<slug:client_name>', views.TokenView.as_view(), name='token'),
     path('discord/accounts', views.DiscordAccountList.as_view(), name='discord-list'),
     path('discord/accounts/sync', views.DiscordAccountSync.as_view(), name='discord-sync'),
+    path('discord/accounts/delete/<int:pk>', views.DiscordAccountDelete.as_view(), name='discord-delete'),
 ]

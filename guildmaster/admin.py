@@ -1,7 +1,7 @@
-from django.contrib import admin
 from concurrency.admin import ConcurrentModelAdmin
+from django.contrib import admin
 
-from guildmaster.models import Client, Token, DiscordAccount
+from guildmaster.models import Client, DiscordAccount, Token
 
 
 @admin.register(Client)
@@ -59,13 +59,8 @@ class DiscordAccountAdmin(ConcurrentModelAdmin):
     list_display_links = ('__str__',)
     list_filter = ('verified', 'mfa_enabled')
     fieldsets = (
-        ('Local', {
-
-            'fields': ('users',)
-        }),
-        ('Remote', {
-            'fields': ('id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled')
-        }),
+        ('Local', {'fields': ('users', 'version')}),
+        ('Remote', {'fields': ('id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled')}),
     )
     readonly_fields = ('id', 'username', 'discriminator', 'users', 'email', 'verified', 'mfa_enabled')
     search_fields = ('username', 'discriminator', 'email', 'users__username', 'users__email')

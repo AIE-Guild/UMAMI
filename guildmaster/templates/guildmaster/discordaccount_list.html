@@ -2,44 +2,34 @@
 {% load staticfiles %}
 {% load i18n %}
 {% block content %}
-    <h2>
-        Discord Accounts
-    </h2>
+    <h2 class="mb-4">Discord Accounts</h2>
 
-    <div class="row">
+    <div class="row mb-4">
+        <form action="{% url 'guildmaster:discord-sync' %}" target="_self">
+            <input type="submit" class="btn btn-primary" value="Synchronize Discord">
+        </form>
+    </div>
 
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th scope="col"></th>
-                    <th scope="col">ID</th>
-                    <th scope="col">Username</th>
-                    <th scope="col">Discriminator</th>
-                    <th scope="col">E-Mail</th>
-                    <th scope="col">Verified</th>
-                    <th scope="col">MFA Enabled</th>
-                    <th scope="col">Delete</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for account in object_list %}
-                    <tr>
-                        <td scope="row" class="d-flex flex-wrap align-items-center"><img
-                                src="https://cdn.discordapp.com/avatars/{{ account.id }}/{{ account.avatar }}.png"
-                                class="img-thumbnail"></td>
-                        <td scope="row">{{ account.id }}</td>
-                        <td scope="row">{{ account.username }}</td>
-                        <td scope="row">{{ account.discriminator }}</td>
-                        <td scope="row">{{ account.email }}</td>
-                        <td scope="row">{{ account.verified }}</td>
-                        <td scope="row">{{ account.mfa_enabled }}</td>
-                        <td scope="row"><i class="fas fa-minus-circle text-danger" title="Delete Account"></i></td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="card-deck align-items-center">
+        {% for account in object_list %}
+            <div class="card mb-4">
+                <div class="row no-gutters">
+                    <div class="col-md-3">
+                        <img src="https://cdn.discordapp.com/avatars/{{ account.id }}/{{ account.avatar }}.png"
+                             class="img-thumbnail" alt="Avatar">
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ account }}</h5>
+                            <p class="card-text">{{ account.email }}</p>
+                            <p class="card-text"><small class="text-muted">Updated: {{ account.updated }}</small></p>
+                            <a class="btn btn-outline-danger"
+                               href="{% url 'guildmaster:discord-delete' pk=account.id %}" role="button">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
 
 {% endblock content %}

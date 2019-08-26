@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'bootstrap4',
+    'concurrency',
     'markdownx',
     'guildmaster',
 ]
