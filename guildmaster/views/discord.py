@@ -1,16 +1,16 @@
 import logging
 
+import requests
 from django import http
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.edit import DeleteView
-from django.shortcuts import render
-import requests
 
 from guildmaster.models import Client, DiscordAccount, DiscordProvider, Token
 from guildmaster.requests import TokenAuth
