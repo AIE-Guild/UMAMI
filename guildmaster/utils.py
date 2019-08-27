@@ -6,6 +6,7 @@ from urllib import parse
 import pytz
 from django.http import HttpRequest
 from django.utils import timezone
+from django.urls import reverse_lazy
 
 
 def exposed_url(request: HttpRequest, path: Optional[str] = '/') -> str:
@@ -20,3 +21,13 @@ def exposed_url(request: HttpRequest, path: Optional[str] = '/') -> str:
 def parse_http_date(text):
     date = dt.datetime(*eut.parsedate(text)[:6])
     return pytz.timezone(timezone.get_default_timezone_name()).localize(date)
+
+
+def reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None, query=None):
+    """Wrapper for Django's reverse that applies an optional query string."""
+    url = reverse_lazy(viewname, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app)
+    if query is not None:
+        target = parse.urlsplit(str(url))
+        target = target._replace(query=parse.urlencode(query, quote_via=parse.quote))
+        url = parse.urlunsplit(target)
+    return url
