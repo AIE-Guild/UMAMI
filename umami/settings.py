@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'redirect',
     'allauth',
     'allauth.account',
+    'allauth.socialaccount',
     'bootstrap4',
     'concurrency',
     'markdownx',
