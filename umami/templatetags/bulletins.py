@@ -17,7 +17,7 @@ class GroupBulletinsNode(template.Node):
         else:
             query = Bulletin.objects.filter(publish=True, public=True)
         if self.size > 0:
-            context[self.name] = [tuple(query[i:i + self.size]) for i in range(0, len(query), self.size)]
+            context[self.name] = [tuple(query[i : i + self.size]) for i in range(0, len(query), self.size)]
         else:
             context[self.name] = query
         return ''

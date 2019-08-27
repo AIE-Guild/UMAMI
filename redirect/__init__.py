@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 default_app_config = 'redirect.apps.RedirectConfig'
