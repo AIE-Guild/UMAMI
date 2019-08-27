@@ -1,4 +1,5 @@
 import logging
+from urllib import parse
 
 import requests
 from django import http
@@ -6,14 +7,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
-from django.urls import reverse_lazy
-from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.edit import DeleteView
 
 from guildmaster.models import Client, DiscordAccount, DiscordProvider, Token
 from guildmaster.requests import TokenAuth
+from guildmaster.utils import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -30,15 +30,17 @@ class DiscordAccountSync(LoginRequiredMixin, View):
         try:
             self.client = Client.objects.get(provider_id=self.provider.name)
         except Client.DoesNotExist:
+            logger.error(f"no client configured for {self.provider.description}")
             messages.error(request, f"No client configured for {self.provider.description}")
-            return http.HttpResponseRedirect(reverse_lazy('guildmaster:discord-list'))
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
         try:
             self.token = Token.objects.get(client=self.client, user=request.user)
         except Token.DoesNotExist:
-            auth_url = '{}?{}'.format(
-                reverse_lazy('guildmaster:authorization', kwargs={'client_name': self.provider.name}),
-                urlencode({settings.GUILDMASTER_RETURN_FIELD_NAME: reverse_lazy('guildmaster:discord-sync')}),
+            auth_url = reverse(
+                'guildmaster:authorization',
+                kwargs={'client_name': self.provider.name},
+                query={settings.GUILDMASTER_RETURN_FIELD_NAME: reverse('guildmaster:discord-sync')},
             )
             return http.HttpResponseRedirect(auth_url)
 
@@ -56,7 +58,7 @@ class DiscordAccountSync(LoginRequiredMixin, View):
         except requests.RequestException as exc:
             logger.error("communication error: %s", exc)
             messages.error(request, f"Cannot communicate with {self.provider.description}: {exc}")
-            return http.HttpResponseRedirect(reverse_lazy('guildmaster:discord-list'))
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
         c = r.json()
         return render(request, "guildmaster/discordaccount_sync.html", context=c)
@@ -69,7 +71,7 @@ class DiscordAccountSync(LoginRequiredMixin, View):
         except requests.RequestException as exc:
             logger.error("communication error: %s", exc)
             messages.error(request, f"Cannot communicate with {self.provider.description}: {exc}")
-            return http.HttpResponseRedirect(reverse_lazy('guildmaster:discord-list'))
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
         data = {
             k: v
@@ -80,11 +82,11 @@ class DiscordAccountSync(LoginRequiredMixin, View):
             account, ok = DiscordAccount.objects.update_or_create(id=data['id'], defaults=data)
         except Exception as exc:
             messages.error(request, f"Cannot synchronize {self.provider.description} account {data['id']}: {exc}")
-            return http.HttpResponseRedirect(reverse_lazy('guildmaster:discord-list'))
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
         account.users.add(request.user)
 
         messages.success(request, f"Synchronized {self.provider.description} account: {account}")
-        return http.HttpResponseRedirect(reverse_lazy('guildmaster:discord-list'))
+        return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
 
 
 class DiscordAccountList(LoginRequiredMixin, ListView):
@@ -97,4 +99,4 @@ class DiscordAccountList(LoginRequiredMixin, ListView):
 
 class DiscordAccountDelete(LoginRequiredMixin, DeleteView):
     model = DiscordAccount
-    success_url = reverse_lazy('guildmaster:discord-list')
+    success_url = reverse('guildmaster:discord-list')
