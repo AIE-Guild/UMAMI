@@ -5,6 +5,8 @@ from typing import Optional
 from urllib import parse
 
 import requests
+from requests.auth import AuthBase
+from requests.status_codes import codes
 from django import http
 from django.conf import settings
 from django.db import models
@@ -15,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from guildmaster import exceptions, utils
 from guildmaster.core import TokenData
 from guildmaster.models import providers
+from guildmaster.exceptions import AuthorizationRequiredError
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -104,6 +107,21 @@ class Client(models.Model):
             },
         )
         logger.info("%s token %s obtained for user %s", self.provider.description, token, request.user)
+
+        try:
+            response = self.session.get(self.provider.userinfo_url, auth=token.auth)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error("failed to fetch user info: %s", exc)
+            raise IOError(f"Failed to fetch user info from {self.provider}.")
+
+        tag = self.provider.resource_tag(response.json())
+        Token.objects.filter(user=request.user, resource_tag=tag).delete()
+        token.resource_tag = tag
+        token.save()
+
+        logger.info("%s token %s obtained for user %s", self.provider.description, token, request.user)
+
         return token
 
     def _fetch_token_data(self, request: http.HttpRequest) -> TokenData:
@@ -165,6 +183,9 @@ class Token(models.Model):
     expires_in = models.PositiveIntegerField(verbose_name=_('expires in'), blank=True, null=True)
     scope = models.TextField(verbose_name=_('scope'), blank=True, default='')
     redirect_uri = models.URLField(verbose_name=_('redirect URI'), blank=True, default='')
+    resource_tag = models.CharField(
+        verbose_name=_('resource tag'), max_length=64, unique=True, null=True, blank=True
+    )
 
     def __str__(self):
         return str(self.id)
@@ -216,3 +237,54 @@ class Token(models.Model):
         self.expires_in = data.expires_in
         self.scope = data.scope
         self.save()
+
+    @property
+    def auth(self):
+        return TokenAuth(self)
+
+
+class TokenAuth(AuthBase):
+    def __init__(self, token: 'Token') -> None:
+        """Authentication class to apply Oauth2 token.
+
+        Args:
+            token: An OAuth2 Token object.
+
+        """
+        self.token = token
+
+    def _handle_response(self, response: requests.Response, **kwargs) -> requests.Response:
+        """Response handler.
+
+        Args:
+            response: A Response object.
+            **kwargs: Keyword arguments passed to the original request.
+
+        Returns:
+            A Response object.
+
+        Raises:
+            AuthorizationRequired: Authentication token was missing or invalid.
+
+        """
+        if response.status_code in (codes.UNAUTHORIZED, codes.FORBIDDEN):
+            raise AuthorizationRequiredError(
+                f"{self.token.client} authorization token failed for user {self.token.user}"
+            )
+        return response
+
+    def __call__(self, request: requests.PreparedRequest) -> requests.PreparedRequest:
+        """Authentication wrapper for requests.
+
+        Args:
+            request: A PreparedRequest object.
+
+        Returns:
+            The request with authentication headers applied.
+
+        """
+        request.register_hook('response', self._handle_response)
+        if self.token.is_stale:
+            self.token.refresh()
+        request.headers['Authorization'] = self.token.authorization
+        return request

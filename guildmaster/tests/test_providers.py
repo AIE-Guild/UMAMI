@@ -4,6 +4,8 @@ import pytest
 def test_providers(tf_provider):
     if tf_provider.name == 'discord':
         assert tf_provider.description == 'Discord'
+    elif tf_provider.name == 'battle-net-us':
+        assert tf_provider.description == 'Battle.net US'
     else:
         pytest.fail(f"unknown provider: {tf_provider.name}")
 

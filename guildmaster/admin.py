@@ -12,17 +12,16 @@ class ClientAdmin(admin.ModelAdmin):
     fields = ('provider_id', 'name', 'enabled', 'callback', 'client_id', 'client_secret', 'scopes', 'scope_override')
     readonly_fields = ('callback', 'scopes')
     prepopulated_fields = {'name': ('provider_id',)}
-    save_on_top = True
 
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'token_type', 'scope', 'timestamp')
-    list_display_links = ('id',)
+    list_display = ('id', 'client', 'user', 'resource_tag', 'token_type', 'scope', 'timestamp')
     fields = (
         'id',
         'client',
         'user',
+        'resource_tag',
         'token_type',
         'scope',
         'access_token',
@@ -36,6 +35,7 @@ class TokenAdmin(admin.ModelAdmin):
         'id',
         'client',
         'user',
+        'resource_tag',
         'token_type',
         'scope',
         'access_token',
@@ -46,7 +46,6 @@ class TokenAdmin(admin.ModelAdmin):
         'redirect_uri',
     )
     search_fields = ('client', 'user')
-    save_on_top = True
 
     def has_add_permission(self, request, obj=None):
         # pylint: disable=arguments-differ
