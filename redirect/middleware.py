@@ -15,7 +15,11 @@ class RedirectServiceMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        host = request.META['HTTP_HOST']
+        try:
+            host = request.META['HTTP_HOST']
+        except KeyError:
+            logger.debug("Redirect service skipped for missing Host header.")
+            return self.get_response(request)
         if host == settings.REDIRECT_HOST:
             logger.debug("Redirect service activated for '%s'.", host)
             try:
@@ -26,5 +30,5 @@ class RedirectServiceMiddleware:
             logger.info("Redirecting '%s' to '%s'.", request.path_info, redirect.location)
             return HttpResponseRedirect(redirect.location)
         else:
-            logger.debug("Redirect service skipped activated for '%s'.", host)
+            logger.debug("Redirect service skipped for '%s'.", host)
             return self.get_response(request)

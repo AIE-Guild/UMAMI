@@ -1,4 +1,5 @@
 import secrets
+import http
 
 import pytest
 from django.contrib.auth.models import User
@@ -7,6 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlencode
 
 from guildmaster import views
+from guildmaster.utils import reverse
 
 
 @pytest.fixture()
@@ -101,3 +103,9 @@ def test_token_bogus(rf, settings, user, tf_client):
     request.session[settings.GUILDMASTER_SESSION_STATE_KEY] = secrets.token_urlsafe(64)
     response = views.TokenView.as_view()(request, client_name=tf_client.name)
     assert response.status_code == 403
+
+
+def test_discord_list(client, user):
+    client.force_login(user)
+    response = client.get(reverse('guildmaster:discord-list'))
+    assert response.status_code == http.HTTPStatus.OK
