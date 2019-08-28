@@ -1,5 +1,5 @@
-import secrets
 import http
+import secrets
 
 import pytest
 from django.contrib.auth.models import User
@@ -62,11 +62,7 @@ def test_token(rf, settings, user, tf_client, requests_mock):
     requests_mock.post(
         tf_client.token_url, json=expected, headers={'Date': timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')}
     )
-    userinfo = {
-        'username': 'henry',
-        'discriminator': '1234',
-        'battletag': 'henry#1234',
-    }
+    userinfo = {'username': 'henry', 'discriminator': '1234', 'battletag': 'henry#1234'}
     requests_mock.get(tf_client.userinfo_url, json=userinfo)
     code = secrets.token_urlsafe(64)
     state = secrets.token_urlsafe(64)

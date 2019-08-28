@@ -5,19 +5,19 @@ from typing import Optional
 from urllib import parse
 
 import requests
-from requests.auth import AuthBase
-from requests.status_codes import codes
 from django import http
 from django.conf import settings
 from django.db import models
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from requests.auth import AuthBase
+from requests.status_codes import codes
 
 from guildmaster import exceptions, utils
 from guildmaster.core import TokenData
-from guildmaster.models import providers
 from guildmaster.exceptions import AuthorizationRequiredError
+from guildmaster.models import providers
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -183,9 +183,7 @@ class Token(models.Model):
     expires_in = models.PositiveIntegerField(verbose_name=_('expires in'), blank=True, null=True)
     scope = models.TextField(verbose_name=_('scope'), blank=True, default='')
     redirect_uri = models.URLField(verbose_name=_('redirect URI'), blank=True, default='')
-    resource_tag = models.CharField(
-        verbose_name=_('resource tag'), max_length=64, unique=True, null=True, blank=True
-    )
+    resource_tag = models.CharField(verbose_name=_('resource tag'), max_length=64, unique=True, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)

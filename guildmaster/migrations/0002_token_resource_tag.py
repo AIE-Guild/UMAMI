@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('guildmaster', '0001_initial'),
-    ]
+    dependencies = [('guildmaster', '0001_initial')]
 
     operations = [
         migrations.AddField(
@@ -18,6 +16,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='client',
             name='provider_id',
-            field=models.CharField(choices=[('discord', 'Discord'), ('battle-net-us', 'Battle.net US')], max_length=64, unique=True, verbose_name='providers'),
+            field=models.CharField(
+                choices=[('discord', 'Discord'), ('battle-net-us', 'Battle.net US')],
+                max_length=64,
+                unique=True,
+                verbose_name='providers',
+            ),
         ),
     ]
