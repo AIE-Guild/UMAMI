@@ -105,7 +105,7 @@ def test_token_bogus(rf, settings, user, tf_client):
     assert response.status_code == 403
 
 
-def test_discord_list(client, user):
+def test_discord_list(settings, client, user):
     client.force_login(user)
     response = client.get(reverse('guildmaster:discord-list'))
     assert response.status_code == http.HTTPStatus.OK
