@@ -1,5 +1,4 @@
 import logging
-from urllib import parse
 
 import requests
 from django import http
@@ -11,6 +10,7 @@ from django.views import View
 from django.views.generic import ListView
 from django.views.generic.edit import DeleteView
 
+from guildmaster import exceptions
 from guildmaster.models import Client, DiscordAccount, DiscordProvider, Token
 from guildmaster.requests import TokenAuth
 from guildmaster.utils import reverse
@@ -20,11 +20,9 @@ logger = logging.getLogger(__name__)
 
 class DiscordAccountSync(LoginRequiredMixin, View):
     provider = DiscordProvider
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.client = None
-        self.token = None
+    client = None
+    token = None
+    userinfo = {}
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -44,6 +42,21 @@ class DiscordAccountSync(LoginRequiredMixin, View):
             )
             return http.HttpResponseRedirect(auth_url)
 
+        auth = TokenAuth(self.token)
+        try:
+            r = requests.get(self.client.provider.base_url + '/users/@me', auth=auth)
+            r.raise_for_status()
+        except exceptions.AuthorizationRequiredError as exc:
+            logger.error("unable to access requested resource: %s", exc)
+            self.token.delete()
+            messages.error(request, f"Cannot access {self.provider.description} user data; please try again")
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
+        except requests.RequestException as exc:
+            logger.error("communication error: %s", exc)
+            messages.error(request, f"Cannot communicate with {self.provider.description}: {exc}")
+            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
+        self.userinfo = r.json()
+
         if request.method == 'GET':
             return self.get(request)
         elif request.method == 'POST':
@@ -51,31 +64,12 @@ class DiscordAccountSync(LoginRequiredMixin, View):
         return self.http_method_not_allowed()
 
     def get(self, request):
-        auth = TokenAuth(self.token)
-        try:
-            r = requests.get(self.client.provider.base_url + '/users/@me', auth=auth)
-            r.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error("communication error: %s", exc)
-            messages.error(request, f"Cannot communicate with {self.provider.description}: {exc}")
-            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
-
-        c = r.json()
-        return render(request, "guildmaster/discordaccount_sync.html", context=c)
+        return render(request, "guildmaster/discordaccount_sync.html", context=self.userinfo)
 
     def post(self, request):
-        auth = TokenAuth(self.token)
-        try:
-            r = requests.get(self.client.provider.base_url + '/users/@me', auth=auth)
-            r.raise_for_status()
-        except requests.RequestException as exc:
-            logger.error("communication error: %s", exc)
-            messages.error(request, f"Cannot communicate with {self.provider.description}: {exc}")
-            return http.HttpResponseRedirect(reverse('guildmaster:discord-list'))
-
         data = {
             k: v
-            for k, v in r.json().items()
+            for k, v in self.userinfo.items()
             if k in ['id', 'username', 'discriminator', 'email', 'verified', 'mfa_enabled', 'avatar']
         }
         try:
