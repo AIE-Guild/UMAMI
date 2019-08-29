@@ -5,8 +5,8 @@ from urllib import parse
 
 import pytz
 from django.http import HttpRequest
-from django.utils import timezone
 from django.urls import reverse_lazy
+from django.utils import timezone
 
 
 def exposed_url(request: HttpRequest, path: Optional[str] = '/') -> str:

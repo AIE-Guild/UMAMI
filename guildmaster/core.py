@@ -20,6 +20,7 @@ class TokenData:
     timestamp: dt.datetime = field(default_factory=timezone.now)
     scope: str = ''
     redirect_uri: str = ''
+    resource: str = ''
 
     @property
     def authorization(self):

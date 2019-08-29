@@ -53,7 +53,9 @@ def test_authorization_response_error(rf, tf_client, settings):
 
 
 def test_fetch_token(rf, tf_client, requests_mock, tf_token_response, tf_datestr, tf_user):
+    userinfo = {'username': 'henry', 'discriminator': '1234', 'battletag': 'henry#1234'}
     requests_mock.post(tf_client.token_url, json=tf_token_response, headers={'Date': tf_datestr})
+    requests_mock.get(tf_client.userinfo_url, json=userinfo)
     data = {'code': secrets.token_urlsafe(16), 'state': secrets.token_urlsafe(16)}
     request = rf.get('/auth/token', username=tf_user, data=data)
     token = tf_client.get_access_token(request)

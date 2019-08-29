@@ -12,7 +12,6 @@ from django.views.generic.edit import DeleteView
 
 from guildmaster import exceptions
 from guildmaster.models import Client, DiscordAccount, DiscordProvider, Token
-from guildmaster.requests import TokenAuth
 from guildmaster.utils import reverse
 
 logger = logging.getLogger(__name__)
@@ -42,9 +41,8 @@ class DiscordAccountSync(LoginRequiredMixin, View):
             )
             return http.HttpResponseRedirect(auth_url)
 
-        auth = TokenAuth(self.token)
         try:
-            r = requests.get(self.client.provider.base_url + '/users/@me', auth=auth)
+            r = requests.get(self.client.provider.base_url + '/users/@me', auth=self.token.auth)
             r.raise_for_status()
         except exceptions.AuthorizationRequiredError as exc:
             logger.error("unable to access requested resource: %s", exc)
