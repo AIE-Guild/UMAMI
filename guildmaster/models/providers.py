@@ -1,11 +1,16 @@
 import abc
-from typing import Optional, Tuple
+from typing import Optional
 
 
 class Provider(abc.ABC):
     """Base class for provider classes that provides a registry."""
 
     registry = {}
+    base_url = None
+    revocation_url = None
+    verification_url = None
+    default_scopes = ()
+    http_basic_auth = False
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -47,29 +52,9 @@ class Provider(abc.ABC):
     def userinfo_url(self) -> Optional[str]:
         pass
 
-    @property
-    @abc.abstractmethod
-    def revocation_url(self) -> Optional[str]:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def verification_url(self) -> Optional[str]:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def default_scopes(self) -> Tuple[str]:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def http_basic_auth(self) -> bool:
-        pass
-
     @classmethod
     @abc.abstractmethod
-    def resource_tag(cls, data: dict) -> str:
+    def resource(cls, data: dict) -> str:
         pass
 
     @classmethod
@@ -87,29 +72,25 @@ class DiscordProvider(Provider):
     token_url = 'https://discordapp.com/api/oauth2/token'
     userinfo_url = 'https://discordapp.com/api/users/@me'
     revocation_url = 'https://discordapp.com/api/oauth2/token/revoke'
-    verification_url = None
     default_scopes = ('identify', 'email')
-    http_basic_auth = False
 
     @classmethod
-    def resource_tag(cls, data: dict) -> str:
+    def resource(cls, data: dict) -> str:
         return data.get('username') + "#" + data.get('discriminator')
 
 
-class BattleNetUSProvider(Provider):
+class BattleNetProvider(Provider):
     """A provider for Battle.net (US), https://develop.battle.net/ ."""
 
-    name = 'battle-net-us'
-    description = 'Battle.net US'
+    name = 'battle-net'
+    description = 'Battle.net'
     base_url = 'https://us.api.battle.net'
     authorization_url = 'https://us.battle.net/oauth/authorize'
     token_url = 'https://us.battle.net/oauth/token'
     userinfo_url = 'https://us.battle.net/oauth/userinfo'
-    revocation_url = None
     verification_url = 'https://us.battle.net/oauth/check_token'
     default_scopes = ('openid', 'wow.profile')
-    http_basic_auth = False
 
     @classmethod
-    def resource_tag(cls, data: dict) -> str:
+    def resource(cls, data: dict) -> str:
         return data.get('battletag')

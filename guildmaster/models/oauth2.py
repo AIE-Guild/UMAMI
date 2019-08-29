@@ -115,9 +115,9 @@ class Client(models.Model):
             logger.error("failed to fetch user info: %s", exc)
             raise IOError(f"Failed to fetch user info from {self.provider}.")
 
-        tag = self.provider.resource_tag(response.json())
-        Token.objects.filter(user=request.user, resource_tag=tag).delete()
-        token.resource_tag = tag
+        tag = self.provider.resource(response.json())
+        Token.objects.filter(user=request.user, resource=tag).delete()
+        token.resource = tag
         token.save()
 
         logger.info("%s token %s obtained for user %s", self.provider.description, token, request.user)
@@ -183,7 +183,7 @@ class Token(models.Model):
     expires_in = models.PositiveIntegerField(verbose_name=_('expires in'), blank=True, null=True)
     scope = models.TextField(verbose_name=_('scope'), blank=True, default='')
     redirect_uri = models.URLField(verbose_name=_('redirect URI'), blank=True, default='')
-    resource_tag = models.CharField(verbose_name=_('resource tag'), max_length=64, unique=True, null=True, blank=True)
+    resource = models.CharField(verbose_name=_('resource tag'), max_length=64, unique=True, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)

@@ -4,8 +4,8 @@ import pytest
 def test_providers(tf_provider):
     if tf_provider.name == 'discord':
         assert tf_provider.description == 'Discord'
-    elif tf_provider.name == 'battle-net-us':
-        assert tf_provider.description == 'Battle.net US'
+    elif tf_provider.name == 'battle-net':
+        assert tf_provider.description == 'Battle.net'
     else:
         pytest.fail(f"unknown provider: {tf_provider.name}")
 
@@ -24,7 +24,6 @@ def test_provider_registry_error():
         http_basic_auth = False
 
     with pytest.raises(AttributeError):
-
         class Bar(Provider):
             name = 'example'
             description = 'Bar'

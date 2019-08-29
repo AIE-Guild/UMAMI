@@ -16,12 +16,12 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'user', 'resource_tag', 'token_type', 'scope', 'timestamp')
+    list_display = ('id', 'client', 'user', 'resource', 'token_type', 'scope', 'timestamp')
     fields = (
         'id',
         'client',
         'user',
-        'resource_tag',
+        'resource',
         'token_type',
         'scope',
         'access_token',
@@ -35,7 +35,7 @@ class TokenAdmin(admin.ModelAdmin):
         'id',
         'client',
         'user',
-        'resource_tag',
+        'resource',
         'token_type',
         'scope',
         'access_token',
